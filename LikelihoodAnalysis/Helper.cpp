@@ -90,7 +90,32 @@ void TH3DSpec::GetRandom3Spec(Double_t &x, Double_t &y, Double_t &z, int seed)
     
 }
 
+Int_t TH3DSpec::GetRandom3Spec(int seed)
+{
+    
+    TRandom3 rndm3(seed);
+    
+    Int_t nbinsx = GetNbinsX();
+    Int_t nbinsy = GetNbinsY();
+    Int_t nbinsz = GetNbinsZ();
+    Int_t nxy  = nbinsx*nbinsy;
+    Int_t nbins = nxy*nbinsz;
+    
+    Double_t integral;
+    if (fIntegral) {
+        if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral();
+    } else {
+        integral = ComputeIntegral();
+        if (integral == 0 || fIntegral == 0) return -100;
+    }
+    Double_t r1 = rndm3.Rndm();
+    
+    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
 
+    return ibin;
+    
+    
+}
 
 
 void TH2DSpec::GetRandom2Spec(Double_t &x, Double_t &y, int seed)

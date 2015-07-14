@@ -115,6 +115,8 @@ public:
     virtual ~TH3DSpec(){}
     
     void GetRandom3Spec(Double_t &, Double_t &, Double_t&, int);
+    Int_t GetRandom3Spec(int);
+
     
     Bool_t AddFast(const TH3DSpec *, const TH3DSpec *, Double_t, Double_t);
     Int_t GetNCells(){ return fNcells;}

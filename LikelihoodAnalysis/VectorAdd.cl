@@ -2,7 +2,7 @@
 
 // this is similar to NVIDIA version
 
-kernel void VectorAdd(global const float*a, global const float*b, global const  float* c, int num)
+kernel void VectorAdd(global const float*a, global const float*b, global   float* c, int num)
 {
     
     
