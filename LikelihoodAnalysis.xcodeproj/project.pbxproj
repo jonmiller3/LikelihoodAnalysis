@@ -29,10 +29,10 @@
 /* Begin PBXFileReference section */
 		D07A2BDE1B504E580033267D /* LikelihoodAnalysis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LikelihoodAnalysis; sourceTree = BUILT_PRODUCTS_DIR; };
 		D07A2BE11B504E580033267D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		D07A2BE81B504E6D0033267D /* create_rtable.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = create_rtable.C; path = ../../create_rtable.C; sourceTree = "<group>"; };
-		D07A2BEA1B504E7C0033267D /* lmu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lmu.h; path = ../../lmu.h; sourceTree = "<group>"; };
-		D07A2BEB1B504E860033267D /* pseudo_experiment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pseudo_experiment.h; path = ../../pseudo_experiment.h; sourceTree = "<group>"; };
-		D07A2BEC1B504E930033267D /* sens.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sens.C; path = ../../sens.C; sourceTree = "<group>"; };
+		D07A2BE81B504E6D0033267D /* create_rtable.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = create_rtable.C; sourceTree = "<group>"; };
+		D07A2BEA1B504E7C0033267D /* lmu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lmu.h; sourceTree = "<group>"; };
+		D07A2BEB1B504E860033267D /* pseudo_experiment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pseudo_experiment.h; sourceTree = "<group>"; };
+		D07A2BEC1B504E930033267D /* sens.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sens.C; sourceTree = "<group>"; };
 		D07A2BF41B504F340033267D /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = OpenCL.framework; sourceTree = "<group>"; };
 		D07A2BF61B505A460033267D /* pdf_result_mle.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = pdf_result_mle.root; sourceTree = "<group>"; };
 		D07A2BF71B5067860033267D /* Helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Helper.cpp; sourceTree = "<group>"; };
