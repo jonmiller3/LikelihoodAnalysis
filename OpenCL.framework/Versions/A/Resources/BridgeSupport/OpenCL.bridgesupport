@@ -2,7 +2,6 @@
 <!DOCTYPE signatures SYSTEM "file://localhost/System/Library/DTDs/BridgeSupport.dtd">
 <signatures version='1.0'>
 <depends_on path='/System/Library/Frameworks/OpenGL.framework'/>
-<depends_on path='/System/Library/Frameworks/CoreServices.framework'/>
 <depends_on path='/System/Library/Frameworks/IOKit.framework'/>
 <depends_on path='/System/Library/Frameworks/CoreGraphics.framework'/>
 <depends_on path='/System/Library/Frameworks/Foundation.framework'/>
@@ -20,6 +19,7 @@
 <opaque name='cl_GLsync' type='^{__GLsync=}'/>
 <opaque name='cl_command_queue' type='^{_cl_command_queue=}'/>
 <opaque name='cl_context' type='^{_cl_context=}'/>
+<opaque name='cl_dag' type='^{_cl_dag=}'/>
 <opaque name='cl_device_id' type='^{_cl_device_id=}'/>
 <opaque name='cl_event' type='^{_cl_event=}'/>
 <opaque name='cl_kernel' type='^{_cl_kernel=}'/>
@@ -27,9 +27,9 @@
 <opaque name='cl_platform_id' type='^{_cl_platform_id=}'/>
 <opaque name='cl_program' type='^{_cl_program=}'/>
 <opaque name='cl_sampler' type='^{_cl_sampler=}'/>
-<string_constant name='CL_PROGRAM_STRING_DEBUG_INFO' value='#line 8585 &quot;&quot; 
+<string_constant name='CL_PROGRAM_STRING_DEBUG_INFO' value='#line 1940 &quot;&quot; 
 
-' value64='#line 7886 &quot;&quot; 
+' value64='#line 2123 &quot;&quot; 
 
 '/>
 <enum name='CLK_ADDRESS_CLAMP' value='1'/>
@@ -612,6 +612,10 @@
 <arg type='^i'/>
 <retval type='^{_cl_context=}'/>
 </function>
+<function name='clCreateDAGAPPLE'>
+<arg type='^{_cl_context=}'/>
+<retval type='^{_cl_dag=}'/>
+</function>
 <function name='clCreateEventFromGLsyncKHR'>
 <arg type='^{_cl_context=}'/>
 <arg type='^{__GLsync=}'/>
@@ -715,6 +719,12 @@
 <arg type='^{_cl_program=}'/>
 <arg type='*'/>
 <arg type='^i'/>
+<retval type='^{_cl_kernel=}'/>
+</function>
+<function name='clCreateKernelFromDAGAPPLE'>
+<arg type='^{_cl_dag=}'/>
+<arg type='I'/>
+<arg type='^^{_cl_device_id}'/>
 <retval type='^{_cl_kernel=}'/>
 </function>
 <function name='clCreateKernelsInProgram'>
@@ -1120,6 +1130,14 @@
 <arg type='^I' type64='^Q'/>
 <retval type='i'/>
 </function>
+<function name='clGetDAGNodeAPPLE'>
+<arg type='^{_cl_dag=}'/>
+<arg type='^{_cl_kernel=}'/>
+<arg type='^i'/>
+<arg type='^I'/>
+<arg type='I'/>
+<retval type='i'/>
+</function>
 <function name='clGetDeviceIDs'>
 <arg type='^{_cl_platform_id=}'/>
 <arg type='Q'/>
@@ -1315,6 +1333,9 @@
 <function name='clReleaseContext'>
 <arg type='^{_cl_context=}'/>
 <retval type='i'/>
+</function>
+<function name='clReleaseDAGAPPLE'>
+<arg type='^{_cl_dag=}'/>
 </function>
 <function name='clReleaseDevice'>
 <arg type='^{_cl_device_id=}'/>

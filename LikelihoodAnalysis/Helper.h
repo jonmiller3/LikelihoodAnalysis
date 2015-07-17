@@ -19,11 +19,27 @@
 #include <TH3.h>
 
 #include <stdio.h>
+#include <iostream>
 
 #include <TMath.h>
 #include <TRandom3.h>
 #include <TCanvas.h>
 
+#ifdef __APPLE__
+#include <OpenCL/OpenCL.h>
+#else
+#include <stdio.h>
+#include <string.h>
+#include "CL/cl.h"
+#define FALSE false
+#define TRUE true
+#endif
+
+using namespace std;
+
+
+// I think you do it like this:
+#define MAX_GPU_COUNT 16
 
 // goal of this class is to take 1D-3D root histograms
 // and change them into 3D memory structures
@@ -125,6 +141,140 @@ public:
 
     
 };
+
+// this is a tool from NVIDIA
+//////////////////////////////////////////////////////////////////////////////
+//! Loads a Program file and prepends the cPreamble to the code.
+//!
+//! @return the source string if succeeded, 0 otherwise
+//! @param cFilename        program filename
+//! @param cPreamble        code that is prepended to the loaded file, typically a set of #defines or a header
+//! @param szFinalLength    returned length of the code string
+//////////////////////////////////////////////////////////////////////////////
+char* oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* szFinalLength)
+{
+    // locals
+    FILE* pFileStream = NULL;
+    size_t szSourceLength;
+    
+    
+    // open the OpenCL source code file
+#ifdef _WIN32   // Windows version
+    if(fopen_s(&pFileStream, cFilename, "rb") != 0)
+    {
+        return NULL;
+    }
+#else           // Linux version
+    
+    pFileStream = fopen(cFilename, "rb");
+    if(pFileStream == 0)
+    {
+        return NULL;
+    }
+#endif
+    
+    size_t szPreambleLength = strlen(cPreamble);
+    
+    // get the length of the source code
+    fseek(pFileStream, 0, SEEK_END);
+    szSourceLength = ftell(pFileStream);
+    fseek(pFileStream, 0, SEEK_SET);
+    
+    // allocate a buffer for the source code string and read it in
+    char* cSourceString = (char *)malloc(szSourceLength + szPreambleLength + 1);
+    memcpy(cSourceString, cPreamble, szPreambleLength);
+    if (fread((cSourceString) + szPreambleLength, szSourceLength, 1, pFileStream) != 1)
+    {
+        fclose(pFileStream);
+        free(cSourceString);
+        return 0;
+    }
+    
+    // close the file and return the total length of the combined (preamble + source) string
+    fclose(pFileStream);
+    if(szFinalLength != 0)
+    {
+        *szFinalLength = szSourceLength + szPreambleLength;
+    }
+    cSourceString[szSourceLength + szPreambleLength] = '\0';
+    
+    return cSourceString;
+}
+
+
+// should should be after I initialize, but before I use the GPU devices
+// I need to do this once per device?
+int CompileOCLKernel(cl_device_id cdDevice, cl_context       cxGPUContext,
+                     const char *ocl_source_filename, cl_program *cpProgram){
+    
+    
+    
+    // this is adapted from Nvidia example code
+    
+    cl_int          ciErrNum;
+    
+    
+    size_t program_length=0;
+    program_length=strlen(ocl_source_filename);
+    // argv[0] should be some setting... I can just set it
+    
+    char *source = oclLoadProgSource(ocl_source_filename,"",&program_length);
+    
+    *cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char **)&source,
+                                           &program_length, &ciErrNum);
+    
+    if (ciErrNum != CL_SUCCESS) {
+        std::cout<<"Error: Failed to create program\n"<<std::endl;
+        return ciErrNum;
+    } else {
+        std::cout<<"clCreateProgramWithSource "<<source<<" succeeded, program_length="<<program_length<<std::endl;
+    }
+    free(source);
+    
+    // OK, we created program, now it needs to be built
+    cl_build_status build_status;
+    
+    // I think I need to include the devices built here...
+    //ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math -cl-nv-verbose", NULL, NULL);
+    ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+    if (ciErrNum != CL_SUCCESS)
+    {
+        // write out standard error, Build Log and PTX, then return error
+        std::cout<<" problem with building program"<<ciErrNum<<std::endl;
+    } else {
+        ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevice, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
+        //shrLog("clGetProgramBuildInfo returned: ");
+        if (build_status == CL_SUCCESS) {
+            std::cout<<"CL_SUCCESS"<<std::endl;
+        } else {
+            std::cout<<"CLErrorNumber = "<<ciErrNum<<std::endl;
+        }
+    }
+    
+    // print out the build log, note in the case where there is nothing shown, some OpenCL PTX->SASS caching has happened
+    /*
+     {
+     char *build_log;
+     size_t ret_val_size;
+     ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevices, CL_PROGRAM_BUILD_LOG, 0, NULL, &ret_val_size);
+     if (ciErrNum != CL_SUCCESS) {
+     shrLog("clGetProgramBuildInfo device %d, failed to get the log size at line %d\n", cdDevices, __LINE__);
+     }
+     build_log = (char *)malloc(ret_val_size+1);
+     ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevices, CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
+     if (ciErrNum != CL_SUCCESS) {
+     shrLog("clGetProgramBuildInfo device %d, failed to get the build log at line %d\n", cdDevices, __LINE__);
+     }
+     // to be carefully, terminate with \0
+     // there's no information in the reference whether the string is 0 terminated or not
+     build_log[ret_val_size] = '\0';
+     shrLog("%s\n", build_log );
+     }
+     */
+    return 0;
+    
+}
+
 
 
 #endif /* defined(__LikelihoodAnalysis__Helper__) */

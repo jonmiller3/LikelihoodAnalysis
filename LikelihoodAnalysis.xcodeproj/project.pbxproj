@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		16957C701B5995FF007DCE7C /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16957C6F1B5995FF007DCE7C /* OpenCL.framework */; };
 		D07A2BE91B504E6D0033267D /* create_rtable.C in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BE81B504E6D0033267D /* create_rtable.C */; };
-		D07A2BF51B504F340033267D /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D07A2BF41B504F340033267D /* OpenCL.framework */; };
 		D07A2BF91B5067860033267D /* Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BF71B5067860033267D /* Helper.cpp */; };
 		D0B2FCA91B534834000CA1F2 /* RunExperiment.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0B2FCA81B534834000CA1F2 /* RunExperiment.cl */; };
 		D0D48F4F1B52F0530028F9E3 /* VectorAdd.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0D48F4E1B52F0530028F9E3 /* VectorAdd.cl */; };
@@ -27,13 +27,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		16957C6F1B5995FF007DCE7C /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = OpenCL.framework; sourceTree = "<group>"; };
 		D07A2BDE1B504E580033267D /* LikelihoodAnalysis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = LikelihoodAnalysis; sourceTree = BUILT_PRODUCTS_DIR; };
 		D07A2BE11B504E580033267D /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D07A2BE81B504E6D0033267D /* create_rtable.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = create_rtable.C; sourceTree = "<group>"; };
 		D07A2BEA1B504E7C0033267D /* lmu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lmu.h; sourceTree = "<group>"; };
 		D07A2BEB1B504E860033267D /* pseudo_experiment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pseudo_experiment.h; sourceTree = "<group>"; };
 		D07A2BEC1B504E930033267D /* sens.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sens.C; sourceTree = "<group>"; };
-		D07A2BF41B504F340033267D /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = OpenCL.framework; sourceTree = "<group>"; };
 		D07A2BF61B505A460033267D /* pdf_result_mle.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = pdf_result_mle.root; sourceTree = "<group>"; };
 		D07A2BF71B5067860033267D /* Helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Helper.cpp; sourceTree = "<group>"; };
 		D07A2BF81B5067860033267D /* Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Helper.h; sourceTree = "<group>"; };
@@ -46,7 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D07A2BF51B504F340033267D /* OpenCL.framework in Frameworks */,
+				16957C701B5995FF007DCE7C /* OpenCL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,8 +56,8 @@
 		D07A2BD51B504E580033267D = {
 			isa = PBXGroup;
 			children = (
+				16957C6F1B5995FF007DCE7C /* OpenCL.framework */,
 				D07A2BF61B505A460033267D /* pdf_result_mle.root */,
-				D07A2BF41B504F340033267D /* OpenCL.framework */,
 				D07A2BE01B504E580033267D /* LikelihoodAnalysis */,
 				D07A2BDF1B504E580033267D /* Products */,
 			);
@@ -252,6 +252,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)/**",
 					"$(PROJECT_DIR)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -260,7 +261,10 @@
 					/usr/local/Cellar/root/5.34.26/include/root,
 				);
 				LD_RUNPATH_SEARCH_PATHS = /usr/local/Cellar/root/5.34.26;
-				LIBRARY_SEARCH_PATHS = "/usr/local/Cellar/root/5.34.26/lib/**";
+				LIBRARY_SEARCH_PATHS = (
+					"/usr/local/Cellar/root/5.34.26/lib/**",
+					"$(inherited)",
+				);
 				OTHER_LDFLAGS = (
 					"-lGui",
 					"-lCore",
@@ -291,6 +295,7 @@
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)/**",
 					"$(PROJECT_DIR)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -299,7 +304,10 @@
 					/usr/local/Cellar/root/5.34.26/include/root,
 				);
 				LD_RUNPATH_SEARCH_PATHS = /usr/local/Cellar/root/5.34.26;
-				LIBRARY_SEARCH_PATHS = "/usr/local/Cellar/root/5.34.26/lib/**";
+				LIBRARY_SEARCH_PATHS = (
+					"/usr/local/Cellar/root/5.34.26/lib/**",
+					"$(inherited)",
+				);
 				OTHER_LDFLAGS = (
 					"-lGui",
 					"-lCore",

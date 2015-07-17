@@ -1,3 +1,8 @@
+
+
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+
 //#include <OpenCL/OpenCL.h>
 
 // a bit silly, I probably should just stick in the value below into the proper place
@@ -9,8 +14,11 @@
 //
 
 // float or double?
-kernel void RunExperiment(global const float* pdf, global const int* data, int numbins, int numdata)
+kernel void RunExperiment(global const double* pdf, constant int* data, constant int* inputs, global double* maxl)
 {
+    
+    int numdata=inputs[0];
+    int numbins=inputs[1];
     
     // data is bin number
     int iGD = get_global_id(0);
@@ -25,7 +33,7 @@ kernel void RunExperiment(global const float* pdf, global const int* data, int n
     
     
     // max should be -1000 or 0?
-    float maxl=0;
+    maxl[iGD]=0;
     float tval[13];
     float t0val[13];
 
@@ -74,7 +82,7 @@ kernel void RunExperiment(global const float* pdf, global const int* data, int n
                                                     
                                                     tval[12]=t0val[12]*(1+iKocean/np);
    
-                                                    float l=0;
+                                                    double l=0;
    
     
                                                     for (int i=0; i<numdata; i++){
@@ -86,7 +94,7 @@ kernel void RunExperiment(global const float* pdf, global const int* data, int n
                                                         
                                                     }
                                                     
-                                                    if (l<maxl) maxl=l;
+                                                    if (l<maxl[iGD]) maxl[iGD]=l;
                                                     
                                                     
                                                 }

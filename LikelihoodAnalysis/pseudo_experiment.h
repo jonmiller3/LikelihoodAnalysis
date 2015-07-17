@@ -5,7 +5,22 @@
 #include <map>
 #include <thread>
 #include "lmu.h"
+
+#include "Helper.h"
 //class lmu;
+
+//#define USECPU
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+
+#ifdef __APPLE__
+#include <OpenCL/OpenCL.h>
+#else
+#include <stdio.h>
+#include <string.h>
+#include "CL/cl.h"
+#define FALSE false
+#define TRUE true
+#endif
 
 using namespace std;
 
@@ -32,7 +47,8 @@ class pseudo_experiment{
 
  public:
   pseudo_experiment(int, model, lmu*);
-  void run();
+  void run(bool);
+    void rungpu();
   double getlogr(){double calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   model* getrange(map<model,double>);
@@ -78,7 +94,341 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
     
 }
 
-void pseudo_experiment::run(){
+void pseudo_experiment::rungpu(){
+    
+    // I could do everything here
+    // I think that I hardcode it to do
+    // n=4 loops
+    
+    
+    // I am just putting everything here
+    cl_command_queue commandQueue;
+    
+    // new CL variables
+    cl_context       cxGPUContext;
+    cl_kernel        kernel[MAX_GPU_COUNT];
+    cl_program       program[MAX_GPU_COUNT];
+    
+    char (*cDevicesName)[256];
+    
+    cl_platform_id  cpPlatform;
+    cl_device_id   *cdDevices;
+    cl_int          ciErrNum;
+    cl_uint         ciDeviceCount;
+    
+    double* data_out;
+
+
+    
+    cl_event gpudone_event;
+    
+    // initialize
+    cpPlatform    = NULL;
+    cdDevices     = NULL; // should that be *cdDevices ??
+    ciErrNum      = CL_SUCCESS;
+    
+    ciDeviceCount = 0;
+    
+    bool bEnableProfile = false; // This is to enable/disable OpenCL based profiling
+
+    int ncells=plmu->getncells();
+
+    size_t  mem_size_input_data = sizeof(cl_double)*ncells*13;
+    
+    
+    cl_uint num_platforms;
+    ciErrNum = clGetPlatformIDs (0, NULL, &num_platforms);
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" failed "<<std::endl;
+
+    }
+    
+    // this is to select..
+    cl_platform_id* clPlatformIDs;
+    (clPlatformIDs = (cl_platform_id*)malloc(num_platforms * sizeof(cl_platform_id)));
+    ciErrNum = clGetPlatformIDs (num_platforms, clPlatformIDs, NULL);
+    //ciErrNum = oclGetPlatformIDs(&cpPlatform);
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" failed "<<std::endl;
+        //shrLog("Error: Failed to create OpenCL context!\n");
+    }
+    
+    // only one platform?
+    cpPlatform=clPlatformIDs[0];
+    
+    
+#ifdef USECPU
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 0, NULL, &ciDeviceCount);
+    cdDevices = (cl_device_id *)malloc(ciDeviceCount * sizeof(cl_device_id) );
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, ciDeviceCount, cdDevices, NULL);
+#else
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 0, NULL, &ciDeviceCount);
+    cdDevices = (cl_device_id *)malloc(ciDeviceCount * sizeof(cl_device_id) );
+    ciErrNum = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, ciDeviceCount, cdDevices, NULL);
+#endif
+    // Allocate a buffer array to store the names GPU device(s)
+    cDevicesName = new char[ciDeviceCount][256];
+    
+    std::cout<<" device count "<<ciDeviceCount<<std::endl;
+    
+    
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" failed to get IDs"<<ciErrNum<<std::endl;
+
+    } else
+    {
+        for (int i=0; i<(int)ciDeviceCount; i++) {
+            clGetDeviceInfo(cdDevices[i], CL_DEVICE_NAME, sizeof(cDevicesName[i]), &cDevicesName[i], NULL);
+            std::cout<<"> OpenCL Device "<<cDevicesName[i]<<", cl_device_id: "<<cdDevices[i]<<std::endl;
+        }
+    }
+    
+    //Create the OpenCL context
+    cxGPUContext = clCreateContext(0, ciDeviceCount, cdDevices, NULL, NULL, &ciErrNum);
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" failed to create context"<<ciErrNum<<std::endl;
+    }
+    
+    std::cout<<" I think that I have produced all the contexts that I need "<<std::endl;
+    
+    
+    
+    
+    
+    
+    
+    // sets the buffers
+    cl_mem input_data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, mem_size_input_data, NULL, &ciErrNum);
+    
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" problem creating buffer "<<std::endl;
+        //shrLog("Error: clCreateBuffer\n");
+    }
+    
+    // I am going to think that there is 1024 total workgroups
+    size_t  mem_size_output_data=sizeof(cl_double)*1024;
+    
+    
+    cl_mem output_data =
+    clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  mem_size_output_data, NULL, &ciErrNum);
+    
+    if (ciErrNum != CL_SUCCESS)
+    {
+        std::cout<<" problem creating output buffer "<<std::endl;
+        //shrLog("Error: clCreateBuffer\n");
+    }
+    
+    
+    for (int i=0; i<ciDeviceCount; i++){
+        
+        // this sets the arguments (ned to change it)
+        ciErrNum = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), (void *) &input_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 0 "<<std::endl;
+        }
+        ciErrNum = clSetKernelArg(kernel[i], 3, sizeof(cl_mem), (void *) &output_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 3 "<<std::endl;
+        }
+        
+        
+        commandQueue = 0;
+        
+        commandQueue = clCreateCommandQueue(cxGPUContext, cdDevices[i], (bEnableProfile ? CL_QUEUE_PROFILING_ENABLE : 0), &ciErrNum);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating max command queue "<<ciErrNum<<std::endl;
+        }
+        
+        char* kernelname;
+        
+        std::string pPath = getenv ("HOME");
+        std::string basename = pPath+"/Dropbox/Geo_neutrinos/likelihood_analysis/LikelihoodAnalysis/";
+        
+        
+#ifdef __APPLE__
+            CompileOCLKernel(cdDevices[i], cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
+#else
+            CompileOCLKernel(cdDevices[i], cxGPUContext, "LikelihoodAnalysis/RunExperiment.cl", &program[i]);
+#endif
+            kernelname="RunExperiment";
+
+        // now handle constant memory
+        size_t mem_size_const_in = sizeof(cl_int)*nobs;
+        
+        cl_mem input_data_in_bins = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+                                          mem_size_const_in, data_in_bins, &ciErrNum);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating data buffer "<<ciErrNum<<std::endl;
+        }
+        // this will be done in general
+        int* nums= new int[2];
+        nums[0]=nobs;
+        nums[1]=ncells;
+        cl_mem input_nums = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+                                          sizeof(cl_int)*2, nums, &ciErrNum);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating inputs buffer "<<std::endl;
+        }
+        kernel[i]= clCreateKernel(program[i], kernelname, &ciErrNum);
+        if (ciErrNum != CL_SUCCESS) {
+            std::cout<<" problem with creating kernel "<<std::endl;
+        }
+        
+        // define the arguments
+        ciErrNum=clSetKernelArg(kernel[i], 1, sizeof(cl_mem), (void *) &input_data_in_bins);
+        
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 1 "<<std::endl;
+        }
+        ciErrNum=clSetKernelArg(kernel[i], 2, sizeof(cl_mem), (void *) &input_nums);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 2 "<<std::endl;
+        }
+        
+        cl_mem dest_data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY,
+                                         mem_size_const_in, NULL, NULL);
+        
+        cl_mem dest_num = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY,
+                                         sizeof(cl_int), NULL, NULL);
+
+
+        
+        // set the constant memory (done once per kernel)
+        
+        ciErrNum = clEnqueueCopyBuffer(commandQueue,
+                                       input_data_in_bins, // src_buffer
+                                       dest_data, // dst_buffer
+                                       0, // src_offset
+                                       0, // dst_offset
+                                       mem_size_const_in,  // size_of_bytes to copy
+                                       0,  // number_events_in_waitlist
+                                       NULL, /// event_wait_list
+                                       NULL); // event
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: Failure to copy max buffer "<<ciErrNum<<std::endl;
+        }
+
+        
+        ciErrNum = clEnqueueCopyBuffer(commandQueue,
+                                       input_nums, // src_buffer
+                                       dest_num, // dst_buffer
+                                       0, // src_offset
+                                       0, // dst_offset
+                                       sizeof(cl_int)*2,  // size_of_bytes to copy
+                                       0,  // number_events_in_waitlist
+                                       NULL, /// event_wait_list
+                                       NULL); // event
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: Failure to copy min buffer "<<std::endl;
+            //shrLog("clEnqueueCopyBuffer() Error: Failed to copy buffer!\n");
+        }
+
+
+        
+        //set the global memory (done multiple times per kernel, but only once here)
+        
+        
+        ciErrNum = clEnqueueWriteBuffer(commandQueue, input_data,  // que and clmem
+                                        CL_TRUE, 0, // blocking? offset
+                                        mem_size_input_data, model_in_bins, // size? and input mem
+                                        0, NULL, NULL); // event wait list, events in wait list, event
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: Failure to copy buffer "<<std::endl;
+
+        }
+        
+        
+        // let's get the size for the work items
+        
+        size_t workitem_size[3];
+        ciErrNum = clGetDeviceInfo(cdDevices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(workitem_size), &workitem_size, NULL);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            // there is a problem
+            std::cout<<" problem with work item size "<<ciErrNum<<std::endl;
+        }
+        
+        size_t maxworkitem_size;
+        ciErrNum = clGetDeviceInfo(cdDevices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxworkitem_size), &maxworkitem_size, NULL);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            // there is a problem
+            std::cout<<" problem max size "<<ciErrNum<<std::endl;
+        }
+        printf("what is max %lu",maxworkitem_size);
+        
+        size_t testworkgroup;
+        ciErrNum = clGetKernelWorkGroupInfo(kernel[i], cdDevices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof(testworkgroup), &testworkgroup, NULL);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            printf("Error: Failed to retrieve kernel work group info! %d\n", ciErrNum);
+            
+        }
+        printf(" what is workgroup test %lu",testworkgroup);
+        size_t globalWorkSize[] = {testworkgroup, 0, 0};
+        size_t localWorkSize[] = {maxworkitem_size,0,0};
+        
+        
+        printf("this is the worksize %lu %lu %lu",workitem_size[0],workitem_size[1],workitem_size[2]);
+        printf("this is the local worksize %lu %lu %lu",
+               localWorkSize[0],localWorkSize[1],localWorkSize[2]);
+        printf("this is the global worksize %lu %lu %lu",
+               globalWorkSize[0],globalWorkSize[1],globalWorkSize[2]);
+        
+        
+        // now we come to the point where it runs the kernel and gets the result
+        
+        clFinish(commandQueue);
+        ciErrNum=clEnqueueNDRangeKernel(commandQueue, kernel[i], 3, 0, globalWorkSize, localWorkSize,
+                                        0, NULL, NULL);
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: in running kernel "<<ciErrNum<<std::endl;
+        }
+        
+        
+        clFinish(commandQueue);
+        
+        ciErrNum = clEnqueueReadBuffer(commandQueue, output_data, CL_FALSE, 0, mem_size_output_data, data_out, NULL, NULL, &gpudone_event);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: in reading buffer "<<std::endl;
+            
+        }
+        
+        clFinish(commandQueue);
+        
+        
+    }
+    
+    
+
+
+    
+    
+    
+    
+}
+
+void pseudo_experiment::run(bool createvector=false){
   
     model mu=maxmu;
     model mutest;
@@ -157,10 +507,13 @@ void pseudo_experiment::run(){
                                                         l+=content;
                                                         
                                                     }
-                                                    
+                  // these are 50% of the use?
+                                                    // all I need is the maximum, I do not need the full set
+                                                    // I can even just have a setting that I turn on/off
+                                                    if (createvector){
 			      lt_set.push_back(l);
 			      mu_set.push_back(mutest);
-                              
+                                                    }
                                                     //cout<<" here is lt "<<lt<<" here is l "<<l<<endl;
                                                     
 			      if (lt>maxl||i==0){
