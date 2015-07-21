@@ -1,7 +1,10 @@
-
-
+#ifdef cl_khr_fp64
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-
+#elif defined(cl_amd_fp64)
+#pragma OPENCL EXTENSION cl_amd_fp64 : enable
+#else
+#define DOUBLEFAIL
+#endif
 
 //#include <OpenCL/OpenCL.h>
 
@@ -14,7 +17,11 @@
 //
 
 // float or double?
+#ifdef DOUBLEFAIL
+kernel void RunExperiment(global const float* pdf, constant int* data, constant int* inputs, global float* maxl)
+#else
 kernel void RunExperiment(global const double* pdf, constant int* data, constant int* inputs, global double* maxl)
+#endif
 {
     
     int numdata=inputs[0];
@@ -82,8 +89,13 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
                                                     
                                                     tval[12]=t0val[12]*(1+iKocean/np);
    
-                                                    double l=0;
-   
+                                                 
+#ifdef DOUBLEFAIL
+   float l=0;
+#else
+   double l=0;
+#endif
+                                                    
     
                                                     for (int i=0; i<numdata; i++){
         

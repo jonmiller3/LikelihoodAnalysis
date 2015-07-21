@@ -1,5 +1,7 @@
 #include "lmu.h"
 #include "pseudo_experiment.h"
+#include "Helper.cpp"
+
 #include <list>
 
 #include <TFile.h>
@@ -28,7 +30,7 @@ double calculatercrit(int nobs, model mu_true, lmu* l, int nexp, string output){
   for (int i=0; i<nexp; i++){
     pseudo=0;
     pseudo = new pseudo_experiment(nobs,mu_true,l);
-    pseudo->run();
+    pseudo->rungpu();
     double r = pseudo->getlogr();
     ofile<<mu_true.Ucore<<" "<<mu_true.Umantle<<" "<<mu_true.Ucrust<<" "<<mu_true.Uocean<<" "<<mu_true.Thcore<<" "<<mu_true.Thmantle<<" "<<mu_true.Thcrust<<" "<<mu_true.Thocean<<" "<<mu_true.Kcore<<" "<<mu_true.Kmantle<<" "<<mu_true.Kcrust<<" "<<mu_true.Kocean<<" "<<r<<" \n";
     rlist.push_back(r);

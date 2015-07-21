@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		16957C701B5995FF007DCE7C /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16957C6F1B5995FF007DCE7C /* OpenCL.framework */; };
 		D07A2BE91B504E6D0033267D /* create_rtable.C in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BE81B504E6D0033267D /* create_rtable.C */; };
-		D07A2BF91B5067860033267D /* Helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BF71B5067860033267D /* Helper.cpp */; };
 		D0B2FCA91B534834000CA1F2 /* RunExperiment.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0B2FCA81B534834000CA1F2 /* RunExperiment.cl */; };
 		D0D48F4F1B52F0530028F9E3 /* VectorAdd.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0D48F4E1B52F0530028F9E3 /* VectorAdd.cl */; };
 /* End PBXBuildFile section */
@@ -165,7 +164,6 @@
 			files = (
 				D07A2BE91B504E6D0033267D /* create_rtable.C in Sources */,
 				D0D48F4F1B52F0530028F9E3 /* VectorAdd.cl in Sources */,
-				D07A2BF91B5067860033267D /* Helper.cpp in Sources */,
 				D0B2FCA91B534834000CA1F2 /* RunExperiment.cl in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

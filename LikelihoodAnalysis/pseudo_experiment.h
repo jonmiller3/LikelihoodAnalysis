@@ -10,7 +10,13 @@
 //class lmu;
 
 //#define USECPU
+#ifdef cl_khr_fp64
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#elif defined(cl_amd_fp64)
+#pragma OPENCL EXTENSION cl_amd_fp64 : enable
+#else
+#define DOUBLEFAIL
+#endif
 
 #ifdef __APPLE__
 #include <OpenCL/OpenCL.h>
@@ -96,6 +102,14 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
 
 void pseudo_experiment::rungpu(){
     
+    #ifdef DOUBLEFAIL
+    std::cout<<" no doubles "<<std::endl;
+    float* data_out;
+#else
+    double* data_out;
+    std::cout<<" doubles! "<<std::endl;
+#endif
+    
     // I could do everything here
     // I think that I hardcode it to do
     // n=4 loops
@@ -115,9 +129,6 @@ void pseudo_experiment::rungpu(){
     cl_device_id   *cdDevices;
     cl_int          ciErrNum;
     cl_uint         ciDeviceCount;
-    
-    double* data_out;
-
 
     
     cl_event gpudone_event;
@@ -132,9 +143,11 @@ void pseudo_experiment::rungpu(){
     bool bEnableProfile = false; // This is to enable/disable OpenCL based profiling
 
     int ncells=plmu->getncells();
-
+#ifdef DOUBLEFAIL
+    size_t  mem_size_input_data = sizeof(cl_float)*ncells*13;
+#else
     size_t  mem_size_input_data = sizeof(cl_double)*ncells*13;
-    
+#endif
     
     cl_uint num_platforms;
     ciErrNum = clGetPlatformIDs (0, NULL, &num_platforms);
@@ -211,7 +224,11 @@ void pseudo_experiment::rungpu(){
     }
     
     // I am going to think that there is 1024 total workgroups
+#ifdef DOUBLEFAIL
+    size_t  mem_size_output_data=sizeof(cl_float)*1024;
+#else
     size_t  mem_size_output_data=sizeof(cl_double)*1024;
+#endif
     
     
     cl_mem output_data =
@@ -224,20 +241,7 @@ void pseudo_experiment::rungpu(){
     }
     
     
-    for (int i=0; i<ciDeviceCount; i++){
-        
-        // this sets the arguments (ned to change it)
-        ciErrNum = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), (void *) &input_data);
-        if (ciErrNum != CL_SUCCESS)
-        {
-            std::cout<<" problem setting argument 0 "<<std::endl;
-        }
-        ciErrNum = clSetKernelArg(kernel[i], 3, sizeof(cl_mem), (void *) &output_data);
-        if (ciErrNum != CL_SUCCESS)
-        {
-            std::cout<<" problem setting argument 3 "<<std::endl;
-        }
-        
+    for (int i=1; i<ciDeviceCount; i++){
         
         commandQueue = 0;
         
@@ -254,11 +258,35 @@ void pseudo_experiment::rungpu(){
         
         
 #ifdef __APPLE__
-            CompileOCLKernel(cdDevices[i], cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
+        CompileOCLKernel(cdDevices[i], cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
 #else
-            CompileOCLKernel(cdDevices[i], cxGPUContext, "LikelihoodAnalysis/RunExperiment.cl", &program[i]);
+        CompileOCLKernel(cdDevices[i], cxGPUContext, "LikelihoodAnalysis/RunExperiment.cl", &program[i]);
 #endif
-            kernelname="RunExperiment";
+        kernelname="RunExperiment";
+        
+  
+      
+        
+        
+        kernel[i]= clCreateKernel(program[i], kernelname, &ciErrNum);
+        if (ciErrNum != CL_SUCCESS) {
+            std::cout<<" problem with creating kernel "<<std::endl;
+        }
+        
+        
+        // this sets the arguments (ned to change it)
+        ciErrNum = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), (void *) &input_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 0 "<<std::endl;
+        }
+        ciErrNum = clSetKernelArg(kernel[i], 3, sizeof(cl_mem), (void *) &output_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 3 "<<std::endl;
+        }
+        
+
 
         // now handle constant memory
         size_t mem_size_const_in = sizeof(cl_int)*nobs;
@@ -279,10 +307,7 @@ void pseudo_experiment::rungpu(){
         {
             std::cout<<" problem creating inputs buffer "<<std::endl;
         }
-        kernel[i]= clCreateKernel(program[i], kernelname, &ciErrNum);
-        if (ciErrNum != CL_SUCCESS) {
-            std::cout<<" problem with creating kernel "<<std::endl;
-        }
+
         
         // define the arguments
         ciErrNum=clSetKernelArg(kernel[i], 1, sizeof(cl_mem), (void *) &input_data_in_bins);
@@ -302,7 +327,7 @@ void pseudo_experiment::rungpu(){
                                          mem_size_const_in, NULL, NULL);
         
         cl_mem dest_num = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY,
-                                         sizeof(cl_int), NULL, NULL);
+                                        2* sizeof(cl_int), NULL, NULL);
 
 
         
@@ -339,6 +364,10 @@ void pseudo_experiment::rungpu(){
         }
 
 
+        
+        
+
+        
         
         //set the global memory (done multiple times per kernel, but only once here)
         
@@ -381,15 +410,15 @@ void pseudo_experiment::rungpu(){
             printf("Error: Failed to retrieve kernel work group info! %d\n", ciErrNum);
             
         }
-        printf(" what is workgroup test %lu",testworkgroup);
-        size_t globalWorkSize[] = {testworkgroup, 0, 0};
-        size_t localWorkSize[] = {maxworkitem_size,0,0};
+        printf(" what is workgroup test %lu \n",testworkgroup);
+        size_t globalWorkSize[] = {testworkgroup, 1, 1};
+        size_t localWorkSize[] = {maxworkitem_size,1,1};
         
         
-        printf("this is the worksize %lu %lu %lu",workitem_size[0],workitem_size[1],workitem_size[2]);
-        printf("this is the local worksize %lu %lu %lu",
+        printf("this is the worksize %lu %lu %lu \n",workitem_size[0],workitem_size[1],workitem_size[2]);
+        printf("this is the local worksize %lu %lu %lu \n",
                localWorkSize[0],localWorkSize[1],localWorkSize[2]);
-        printf("this is the global worksize %lu %lu %lu",
+        printf("this is the global worksize %lu %lu %lu \n",
                globalWorkSize[0],globalWorkSize[1],globalWorkSize[2]);
         
         
