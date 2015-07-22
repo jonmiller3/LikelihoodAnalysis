@@ -183,6 +183,10 @@ float* lmu::getmodelarray(){
     
     copy(s12array, s12array+ ncells, res + 12*ncells);
     
+    for (int i=0; i<ncells*13; i++) {
+        if (isnan(res[i])) std::cout<<" test "<<res[i]<<std::endl;
+    }
+    
     return res;
     
 }

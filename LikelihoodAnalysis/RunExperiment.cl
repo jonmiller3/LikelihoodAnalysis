@@ -94,7 +94,7 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
     
                         int databin=data[i];
                         for (int modelnumber=0; modelnumber<13; modelnumber++){
-                            if (pdf[modelnumber*numbins+databin]>0) printf(" test data %f",pdf[modelnumber*numbins+databin]);
+                            if (pdf[modelnumber*numbins+databin]>0) printf(" test data %f %i",pdf[modelnumber*numbins+databin],modelnumber*numbins+databin);
                             l+=(pdf[modelnumber*numbins+databin]*tval[modelnumber]);
                         }
                         
