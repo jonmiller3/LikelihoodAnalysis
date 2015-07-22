@@ -30,6 +30,29 @@
 
 using namespace std;
 
+
+float* float_from_model(model mu){
+  
+    float* res = new float[12];
+    
+    res[0]=mu.Ucore;
+    res[1]=mu.Umantle;
+    res[2]=mu.Ucrust;
+    res[3]=mu.Uocean;
+    res[4]=mu.Ucore;
+    res[5]=mu.Umantle;
+    res[6]=mu.Ucrust;
+    res[7]=mu.Uocean;
+    res[8]=mu.Ucore;
+    res[9]=mu.Umantle;
+    res[10]=mu.Ucrust;
+    res[11]=mu.Uocean;
+    
+    return res;
+    
+};
+
+
 class pseudo_experiment{
 
  private:
@@ -98,6 +121,7 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
     maxmu.Kcrust=194*1e4;
     maxmu.Kocean=4*1e4;
     
+    
 }
 
 void pseudo_experiment::rungpu(){
@@ -124,6 +148,8 @@ void pseudo_experiment::rungpu(){
     cl_program       program[MAX_GPU_COUNT];
     
     char (*cDevicesName)[256];
+    char (*cDevicesExt)[256];
+    cl_ulong cDevicesGlobalMem;
     
     cl_platform_id  cpPlatform;
     cl_device_id   *cdDevices;
@@ -195,7 +221,10 @@ void pseudo_experiment::rungpu(){
     {
         for (int i=0; i<(int)ciDeviceCount; i++) {
             clGetDeviceInfo(cdDevices[i], CL_DEVICE_NAME, sizeof(cDevicesName[i]), &cDevicesName[i], NULL);
+            clGetDeviceInfo(cdDevices[i], CL_DEVICE_EXTENSIONS, sizeof(cDevicesExt[i]), &cDevicesExt[i], NULL);
+            clGetDeviceInfo(cdDevices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cDevicesGlobalMem), &cDevicesGlobalMem, NULL);
             std::cout<<"> OpenCL Device "<<cDevicesName[i]<<", cl_device_id: "<<cdDevices[i]<<std::endl;
+            std::cout<<"> OpenCL Ext "<<cDevicesExt[i]<<", global mem: "<<cDevicesGlobalMem<<std::endl;
         }
     }
     
@@ -211,28 +240,6 @@ void pseudo_experiment::rungpu(){
     
     
     
-    
-    
-    
-    // sets the buffers
-    cl_mem input_data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, mem_size_input_data, NULL, &ciErrNum);
-    
-    if (ciErrNum != CL_SUCCESS)
-    {
-        std::cout<<" problem creating buffer "<<std::endl;
-        //shrLog("Error: clCreateBuffer\n");
-    }
-    
-    // I am going to think that there is 1024 total workgroups
-#ifdef DOUBLEFAIL
-    size_t  mem_size_output_data=sizeof(cl_float)*1024;
-#else
-    size_t  mem_size_output_data=sizeof(cl_double)*1024;
-#endif
-    
-    
-    cl_mem output_data =
-    clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  mem_size_output_data, NULL, &ciErrNum);
     
     if (ciErrNum != CL_SUCCESS)
     {
@@ -274,18 +281,6 @@ void pseudo_experiment::rungpu(){
         }
         
         
-        // this sets the arguments (ned to change it)
-        ciErrNum = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), (void *) &input_data);
-        if (ciErrNum != CL_SUCCESS)
-        {
-            std::cout<<" problem setting argument 0 "<<std::endl;
-        }
-        ciErrNum = clSetKernelArg(kernel[i], 3, sizeof(cl_mem), (void *) &output_data);
-        if (ciErrNum != CL_SUCCESS)
-        {
-            std::cout<<" problem setting argument 3 "<<std::endl;
-        }
-        
 
 
         // now handle constant memory
@@ -308,6 +303,7 @@ void pseudo_experiment::rungpu(){
             std::cout<<" problem creating inputs buffer "<<std::endl;
         }
 
+
         
         // define the arguments
         ciErrNum=clSetKernelArg(kernel[i], 1, sizeof(cl_mem), (void *) &input_data_in_bins);
@@ -323,13 +319,17 @@ void pseudo_experiment::rungpu(){
             std::cout<<" problem setting argument 2 "<<std::endl;
         }
         
+        
+
+        
+        
         cl_mem dest_data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY,
                                          mem_size_const_in, NULL, NULL);
         
         cl_mem dest_num = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY,
                                         2* sizeof(cl_int), NULL, NULL);
 
-
+  
         
         // set the constant memory (done once per kernel)
         
@@ -365,15 +365,69 @@ void pseudo_experiment::rungpu(){
 
 
         
-        
+        clFlush(commandQueue);
 
+        
+        
+        
+        
+        // sets the buffers
+        cl_mem input_data = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, mem_size_input_data, NULL, &ciErrNum);
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating buffer "<<std::endl;
+            //shrLog("Error: clCreateBuffer\n");
+        }
+
+        // sets the buffers
+        cl_mem input_model = clCreateBuffer(cxGPUContext, CL_MEM_READ_ONLY, sizeof(cl_float)*13, NULL, &ciErrNum);
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating buffer "<<std::endl;
+            //shrLog("Error: clCreateBuffer\n");
+        }
+        
+        // I am going to think that there is 1024 total workgroups
+#ifdef DOUBLEFAIL
+        size_t  mem_size_output_data=sizeof(cl_float)*1024;
+#else
+        size_t  mem_size_output_data=sizeof(cl_double)*1024;
+#endif
+        
+        
+        cl_mem output_data =
+        clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  mem_size_output_data, NULL, &ciErrNum);
+        
+        
+        
+        
+        // this sets the arguments (ned to change it)
+        ciErrNum = clSetKernelArg(kernel[i], 0, sizeof(cl_mem), (void *) &input_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 0 "<<std::endl;
+        }
+        ciErrNum = clSetKernelArg(kernel[i], 3, sizeof(cl_mem), (void *) &input_model);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 3 "<<std::endl;
+        }
+
+        ciErrNum = clSetKernelArg(kernel[i], 4, sizeof(cl_mem), (void *) &output_data);
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem setting argument 4 "<<std::endl;
+        }
         
         
         //set the global memory (done multiple times per kernel, but only once here)
         
         
         ciErrNum = clEnqueueWriteBuffer(commandQueue, input_data,  // que and clmem
-                                        CL_TRUE, 0, // blocking? offset
+        //ciErrNum = clEnqueueCopyBuffer(commandQueue, model_in_bins,input_data,0,0,mem_size_input_data,0,NULL,NULL);
+                                       CL_TRUE, 0, // blocking? offset
                                         mem_size_input_data, model_in_bins, // size? and input mem
                                         0, NULL, NULL); // event wait list, events in wait list, event
         
@@ -381,6 +435,18 @@ void pseudo_experiment::rungpu(){
         {
             std::cout<<" Error: Failure to copy buffer "<<std::endl;
 
+        }
+
+        ciErrNum = clEnqueueWriteBuffer(commandQueue, input_model,  // que and clmem
+                                        //ciErrNum = clEnqueueCopyBuffer(commandQueue, model_in_bins,input_data,0,0,mem_size_input_data,0,NULL,NULL);
+                                        CL_TRUE, 0, // blocking? offset
+                                        sizeof(cl_float)*13, float_from_model(maxmu), // size? and input mem
+                                        0, NULL, NULL); // event wait list, events in wait list, event
+        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" Error: Failure to copy buffer "<<std::endl;
+            
         }
         
         
@@ -411,8 +477,8 @@ void pseudo_experiment::rungpu(){
             
         }
         printf(" what is workgroup test %lu \n",testworkgroup);
-        size_t globalWorkSize[] = {testworkgroup, 1, 1};
-        size_t localWorkSize[] = {maxworkitem_size,1,1};
+        size_t globalWorkSize[] = {maxworkitem_size, 1, 1};
+        size_t localWorkSize[] = {testworkgroup,1,1};
         
         
         printf("this is the worksize %lu %lu %lu \n",workitem_size[0],workitem_size[1],workitem_size[2]);
@@ -423,6 +489,7 @@ void pseudo_experiment::rungpu(){
         
         
         // now we come to the point where it runs the kernel and gets the result
+        std::cout<<" go device "<<i<<std::endl;
         
         clFinish(commandQueue);
         ciErrNum=clEnqueueNDRangeKernel(commandQueue, kernel[i], 3, 0, globalWorkSize, localWorkSize,
@@ -433,8 +500,12 @@ void pseudo_experiment::rungpu(){
             std::cout<<" Error: in running kernel "<<ciErrNum<<std::endl;
         }
         
+                std::cout<<" ready to finish "<<i<<std::endl;
         
         clFinish(commandQueue);
+        
+        std::cout<<" ready to read out "<<i<<std::endl;
+
         
         ciErrNum = clEnqueueReadBuffer(commandQueue, output_data, CL_FALSE, 0, mem_size_output_data, data_out, NULL, NULL, &gpudone_event);
         if (ciErrNum != CL_SUCCESS)
@@ -443,8 +514,11 @@ void pseudo_experiment::rungpu(){
             
         }
         
+        std::cout<<" ready to finish  "<<i<<std::endl;
+
+        
         // this crashes it... why?
-        //clFinish(commandQueue);
+        clFinish(commandQueue);
         
         
     }
