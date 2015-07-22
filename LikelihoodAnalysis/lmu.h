@@ -2,12 +2,15 @@
 #define LMU_H
 
 #include <TH1D.h>
+#include <TH1F.h>
 #include <TH1.h>
 
 #include <TH2D.h>
+#include <TH2F.h>
 #include <TH2.h>
 
 #include <TH3D.h>
+#include <TH3F.h>
 #include <TH3.h>
 
 #include <TMath.h>
@@ -42,20 +45,20 @@ struct model {
 
 
 struct modelpdf {
-    TH3DSpec* Ucrust;
-    TH3DSpec* Uocean;
-    TH3DSpec* Ucore;
-    TH3DSpec* Umantle;
+    TH3FSpec* Ucrust;
+    TH3FSpec* Uocean;
+    TH3FSpec* Ucore;
+    TH3FSpec* Umantle;
     
-    TH3DSpec* Thcrust;
-    TH3DSpec* Thocean;
-    TH3DSpec* Thcore;
-    TH3DSpec* Thmantle;
+    TH3FSpec* Thcrust;
+    TH3FSpec* Thocean;
+    TH3FSpec* Thcore;
+    TH3FSpec* Thmantle;
     
-    TH3DSpec* Kcrust;
-    TH3DSpec* Kocean;
-    TH3DSpec* Kcore;
-    TH3DSpec* Kmantle;
+    TH3FSpec* Kcrust;
+    TH3FSpec* Kocean;
+    TH3FSpec* Kcore;
+    TH3FSpec* Kmantle;
     
     
 };
@@ -111,8 +114,8 @@ class lmu{
 
 private:
   modelpdf fs;
-  TH3DSpec* fb;
-  TH3DSpec* ft;
+  TH3FSpec* fb;
+  TH3FSpec* ft;
 
     
     int nbinsx;
@@ -123,7 +126,7 @@ private:
     double maxz;
 
 public:
-  lmu(modelpdf hs, TH3DSpec* hb){fs=hs;fb=hb;
+  lmu(modelpdf hs, TH3FSpec* hb){fs=hs;fb=hb;
     nbinsx=fb->GetXaxis()->GetNbins();
     maxx=fb->GetXaxis()->GetXmax();
     nbinsy=fb->GetYaxis()->GetNbins();
@@ -140,23 +143,23 @@ public:
     int getncells(){return fb->GetNCells();}
     
     // but I think that double* is better?
-    double* getmodelarray();
+    float* getmodelarray();
     
     
 };
 
 // but I think I want double*
-double* lmu::getmodelarray(){
+float* lmu::getmodelarray(){
     
     int ncells = fb->GetNCells();
     
     // I think that doing this is unncessary
-    const Double_t* barray = fb->GetArray();
-    const Double_t* s1array = fs.Ucore->GetArray();
-    const Double_t* s12array = fs.Kocean->GetArray();
+    const float* barray = fb->GetArray();
+    const float* s1array = fs.Ucore->GetArray();
+    const float* s12array = fs.Kocean->GetArray();
     
     // res should be 13*nbins
-    double* res = new double[ncells*13];
+    float* res = new float[ncells*13];
     
     copy(barray, barray+ncells, res);
     copy(s1array, s1array+ ncells, res + ncells);
@@ -191,7 +194,7 @@ int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, do
     
   ft=0;
 
-  ft = new TH3DSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
+  ft = new TH3FSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
 
     ft->Add(fs.Ucore,fb,mu.Ucore,1);
     ft->AddFast(fs.Umantle,ft,mu.Umantle,1);
@@ -253,7 +256,7 @@ int lmu::getrandom(model mu, int nobs, double* phi, double* energy, double* thet
 
 
   ft=0;
-  ft = new TH3DSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
+  ft = new TH3FSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
     
     ft->Add(fs.Ucore,fb,mu.Ucore,1);
     ft->AddFast(fs.Umantle,ft,mu.Umantle,1);
@@ -298,7 +301,7 @@ int* lmu::getrandom(model mu, int nobs){
     int* res=new int[nobs];
     
     ft=0;
-    ft = new TH3DSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
+    ft = new TH3FSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
     
     ft->Add(fs.Ucore,fb,mu.Ucore,1);
     ft->AddFast(fs.Umantle,ft,mu.Umantle,1);

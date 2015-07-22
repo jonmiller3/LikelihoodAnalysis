@@ -47,7 +47,7 @@ class pseudo_experiment{
     int* data_in_bins;
     
     // problem is that I would prefer double and not float?
-    double* model_in_bins;
+    float* model_in_bins;
     
     
 
@@ -443,7 +443,8 @@ void pseudo_experiment::rungpu(){
             
         }
         
-        clFinish(commandQueue);
+        // this crashes it... why?
+        //clFinish(commandQueue);
         
         
     }
@@ -520,7 +521,7 @@ void pseudo_experiment::run(bool createvector=false){
                                                     
                                                     for (int i=0; i<nobs; i++){
                                                         
-                                                        double content=0;
+                                                        float content=0;
                                                         for (int modelnumber=0; modelnumber<13; modelnumber++){
                                                             content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
                                                             //cout<<" l steps "<<content<<" step "<<modelnumber*ncells+data_in_bins[i]<<" modelval "<<tval[modelnumber]<<" mnum "<<modelnumber<<endl;
@@ -533,7 +534,7 @@ void pseudo_experiment::run(bool createvector=false){
                                                             content = -1000;
                                                         }
                                                         
-                                                        l+=content;
+                                                        l+=(double)content;
                                                         
                                                     }
                   // these are 50% of the use?

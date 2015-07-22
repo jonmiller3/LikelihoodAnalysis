@@ -10,12 +10,15 @@
 #define __LikelihoodAnalysis__Helper__
 
 #include <TH1D.h>
+#include <TH1F.h>
 #include <TH1.h>
 
 #include <TH2D.h>
+#include <TH2F.h>
 #include <TH2.h>
 
 #include <TH3D.h>
+#include <TH3F.h>
 #include <TH3.h>
 
 #include <stdio.h>
@@ -97,6 +100,28 @@ public:
 };
 
 
+class TH1FSpec: public TH1F{
+    
+public:
+    TH1FSpec();
+    TH1FSpec(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup): TH1F(name,title,nbinsx,xlow,xup){}
+    TH1FSpec(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins): TH1F(name,title,nbinsx,xbins){}
+    TH1FSpec(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins) : TH1F(name,title,nbinsx,xbins){}
+    //TH1FSpec(const TVectorF &v) : TH1F ( *v ){}
+    //TH1FSpec(const TH1FSpec &h1f) : TH1F( &hlf ){}
+    virtual ~TH1FSpec(){}
+    
+    double GetRandomSpec(int);
+    Bool_t AddFast(const TH1FSpec *, const TH1FSpec *, Double_t, Double_t);
+    Int_t GetNCells(){ return fNcells;}
+    const float* GetArray() const { return fArray;}
+    
+    
+    
+};
+
+
+
 class TH2DSpec: public TH2D{
     
 public:
@@ -118,6 +143,32 @@ public:
 
     
 };
+
+
+
+class TH2FSpec: public TH2F{
+    
+public:
+    TH2FSpec();
+    TH2FSpec(const char* name, const char* title, Int_t nbinsx, const Double_t* xbins, Int_t nbinsy, const Double_t* ybins): TH2F(name,title,nbinsx,xbins,nbinsy,ybins){}
+    TH2FSpec(const char *name,const char *title, Int_t nbinsx, const Float_t* xbins, Int_t nbinsy, const Float_t* ybins): TH2F(name,title,nbinsx,xbins,nbinsy,ybins){}
+    TH2FSpec(const char *name,const char *title, Int_t nbinsx, const Double_t* xbins, Int_t nbinsy, Double_t ylow, Double_t yup) : TH2F(name,title,nbinsx,xbins,nbinsy,ylow,yup){}
+    TH2FSpec(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, const Double_t* ybins) : TH2F(name,title,nbinsx,xlow,xup,nbinsy,ybins){}
+    TH2FSpec(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup) : TH2F(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup){}
+    //TH1FSpec(const TVectorF &v) : TH1F ( *v ){}
+    //TH1FSpec(const TH1FSpec &h1f) : TH1F( &hlf ){}
+    virtual ~TH2FSpec(){}
+    
+    void GetRandom2Spec(Double_t &, Double_t &, int);
+    
+    Bool_t AddFast(const TH2FSpec *, const TH2FSpec *, Double_t, Double_t);
+    Int_t GetNCells(){ return fNcells;}
+    const float* GetArray() const { return fArray;}
+    
+    
+};
+
+
 
 class TH3DSpec: public TH3D{
     
@@ -141,6 +192,33 @@ public:
 
     
 };
+
+
+
+class TH3FSpec: public TH3F{
+    
+public:
+    TH3FSpec();
+    TH3FSpec(const char* name, const char* title, Int_t nbinsx, const Float_t* xbins, Int_t nbinsy, const Float_t* ybins, Int_t nbinsz, const Float_t* zbins): TH3F(name, title, nbinsx, xbins, nbinsy, ybins, nbinsz, zbins){}
+    
+    TH3FSpec(const char* name, const char* title, Int_t nbinsx, const Double_t* xbins, Int_t nbinsy, const Double_t* ybins, Int_t nbinsz, const Double_t* zbins): TH3F(name, title, nbinsx, xbins, nbinsy, ybins, nbinsz, zbins){}
+    TH3FSpec(const char* name, const char* title, Int_t nbinsx, Double_t xlow, Double_t xup, Int_t nbinsy, Double_t ylow, Double_t yup, Int_t nbinsz, Double_t zlow, Double_t zup): TH3F( name, title, nbinsx, xlow, xup, nbinsy, ylow, yup, nbinsz, zlow, zup){}
+    
+    virtual ~TH3FSpec(){}
+    
+    void GetRandom3Spec(Double_t &, Double_t &, Double_t&, int);
+    Int_t GetRandom3Spec(int);
+    
+    
+    Bool_t AddFast(const TH3FSpec *, const TH3FSpec *, Double_t, Double_t);
+    Int_t GetNCells(){ return fNcells;}
+    const float* GetArray() const { return fArray;}
+    
+    
+    
+};
+
+
 
 // this is a tool from NVIDIA
 //////////////////////////////////////////////////////////////////////////////

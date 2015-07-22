@@ -17,6 +17,7 @@
 #include <TH3.h>
 
 #include <TH3D.h>
+#include <TH3F.h>
 
 using namespace std;
 
@@ -83,22 +84,22 @@ int main(int argc, char **argv){
 
     modelpdf spdf;
     
-    spdf.Ucore = (TH3DSpec*)signalfile->Get("finalpdf_ucore");
-    spdf.Umantle = (TH3DSpec*)signalfile->Get("finalpdf_umantle");
-    spdf.Ucrust = (TH3DSpec*)signalfile->Get("finalpdf_ucrust");
-    spdf.Uocean = (TH3DSpec*)signalfile->Get("finalpdf_uocean");
+    spdf.Ucore = (TH3FSpec*)signalfile->Get("finalpdf_ucore");
+    spdf.Umantle = (TH3FSpec*)signalfile->Get("finalpdf_umantle");
+    spdf.Ucrust = (TH3FSpec*)signalfile->Get("finalpdf_ucrust");
+    spdf.Uocean = (TH3FSpec*)signalfile->Get("finalpdf_uocean");
     
-    spdf.Thcore = (TH3DSpec*)signalfile->Get("finalpdf_thcore");
-    spdf.Thmantle = (TH3DSpec*)signalfile->Get("finalpdf_thmantle");
-    spdf.Thcrust = (TH3DSpec*)signalfile->Get("finalpdf_thcrust");
-    spdf.Thocean = (TH3DSpec*)signalfile->Get("finalpdf_thocean");
+    spdf.Thcore = (TH3FSpec*)signalfile->Get("finalpdf_thcore");
+    spdf.Thmantle = (TH3FSpec*)signalfile->Get("finalpdf_thmantle");
+    spdf.Thcrust = (TH3FSpec*)signalfile->Get("finalpdf_thcrust");
+    spdf.Thocean = (TH3FSpec*)signalfile->Get("finalpdf_thocean");
 
-    spdf.Kcore = (TH3DSpec*)signalfile->Get("finalpdf_kcore");
-    spdf.Kmantle = (TH3DSpec*)signalfile->Get("finalpdf_kmantle");
-    spdf.Kcrust = (TH3DSpec*)signalfile->Get("finalpdf_kcrust");
-    spdf.Kocean = (TH3DSpec*)signalfile->Get("finalpdf_kocean");
+    spdf.Kcore = (TH3FSpec*)signalfile->Get("finalpdf_kcore");
+    spdf.Kmantle = (TH3FSpec*)signalfile->Get("finalpdf_kmantle");
+    spdf.Kcrust = (TH3FSpec*)signalfile->Get("finalpdf_kcrust");
+    spdf.Kocean = (TH3FSpec*)signalfile->Get("finalpdf_kocean");
     
-  TH3DSpec* bpdf = (TH3DSpec*)signalfile->Get("finalpdf_sun");
+  TH3FSpec* bpdf = (TH3FSpec*)signalfile->Get("finalpdf_sun");
   
   lmu* ltotal = new lmu(spdf,bpdf);
   int numexp = 1;

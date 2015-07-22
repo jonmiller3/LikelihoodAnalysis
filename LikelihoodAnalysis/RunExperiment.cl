@@ -31,12 +31,12 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
     int iGD = get_global_id(0);
     
     // this is for 1024 workgroup size
-    //int i8=iGD%8;
-    //int iGD8=((iGD-i8)/8);
-    //int i64=iGD8%8;
-    //int i512=(iGD8-i64)/8)%8;
+    int i8=iGD%8;
+    int i64=((iGD-i8)/8)%8;
+    int i512=((iGD-i64*8-i8)/64)%8;
+    int i1024=((iGD-i512*64-i64*8-i8)/512)%8;
 
-    
+    //printf(" first %i %i %i %i %i \n",i8,i64,i512,i1024);
     
     
     // max should be -1000 or 0?
@@ -61,33 +61,27 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
     // background is strength 1 always
     tval[0]=1;
     
-    float np=8.;
+    float np=4.;
     
-    for (int iUcore=-np; iUcore<np; iUcore++){
-        tval[1]=(np+iUcore);
-        for (int iUmantle=-np; iUmantle<np; iUmantle++){
-            tval[2]=t0val[2]*(1+iUmantle/np);
-            for (int iUcrust=-np; iUcrust<np; iUcrust++){
-                tval[3]=t0val[3]*(1+iUcrust/np);
-                for (int iUocean=-np; iUocean<np; iUocean++){
-                    tval[4]=t0val[4]*(1+iUocean/np);
-                    for (int iThcore=-np; iThcore<np; iThcore++){
-                        tval[5]=(np+iThcore);
-                        for (int iThmantle=-np; iThmantle<np; iThmantle++){
-                            tval[6]=t0val[6]*(1+iThmantle/np);
-                            for (int iThcrust=-np; iThcrust<np; iThcrust++){
-                                tval[7]=t0val[7]*(1+iThcrust/np);
-                                for (int iThocean=-np; iThocean<np; iThocean++){
-                                    tval[8]=t0val[8]*(1+iThocean/np);
-                                    for (int iKcore=-np; iKcore<np; iKcore++){
-                                        tval[9]=(np+iKcore)*1e4;
-                                        for (int iKmantle=-np; iKmantle<np; iKmantle++){
-                                            tval[10]=t0val[10]*(1+iKmantle/np);
-                                            for (int iKcrust=-np; iKcrust<np; iKcrust++){
-                                                tval[11]=t0val[11]*(1+iKcrust/np);
-                                                for (int iKocean=-np; iKocean<np; iKocean++){
-                                                    
-                                                    tval[12]=t0val[12]*(1+iKocean/np);
+    tval[1]=t0val[1];
+    tval[2]=t0val[2];
+    tval[3]=t0val[3];
+    tval[4]=t0val[4];
+    tval[5]=t0val[5];
+    
+    tval[6]=t0val[6];
+    tval[7]=t0val[7];
+    tval[8]=t0val[8];
+    
+    for (int iKcore=-np; iKcore<np; iKcore++){
+        tval[9]=(np+iKcore)*1e4;
+        for (int iKmantle=-np; iKmantle<np; iKmantle++){
+            tval[10]=t0val[10]*(1+iKmantle/np);
+            for (int iKcrust=-np; iKcrust<np; iKcrust++){
+                tval[11]=t0val[11]*(1+iKcrust/np);
+                for (int iKocean=-np; iKocean<np; iKocean++){
+                    
+                    tval[12]=t0val[12]*(1+iKocean/np);
    
                                                  
 #ifdef DOUBLEFAIL
@@ -95,28 +89,20 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
 #else
    double l=0;
 #endif
-                                                    
+                    
+                    for (int i=0; i<numdata; i++){
     
-                                                    for (int i=0; i<numdata; i++){
-        
-                                                        int databin=data[i];
-                                                        for (int modelnumber=0; modelnumber<13; modelnumber++){
-                                                            l+=(pdf[modelnumber*numbins+databin]*tval[modelnumber]);
-                                                        }
-                                                        
-                                                    }
-                                                    
-                                                    if (l<maxl[iGD]) maxl[iGD]=l;
-                                                    
-                                                    
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        int databin=data[i];
+                        for (int modelnumber=0; modelnumber<13; modelnumber++){
+                            if (pdf[modelnumber*numbins+databin]>0) printf(" test data %f",pdf[modelnumber*numbins+databin]);
+                            l+=(pdf[modelnumber*numbins+databin]*tval[modelnumber]);
                         }
+                        
                     }
+                                                    
+                    if (l>maxl[iGD]) maxl[iGD]=l;
+                                                    
+                                                    
                 }
             }
         }
@@ -125,7 +111,7 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
     
     
     
-    
+    printf(" out %i %f \n",iGD,maxl[iGD]);
     
     
 }
