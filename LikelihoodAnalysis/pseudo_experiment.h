@@ -500,11 +500,11 @@ void pseudo_experiment::rungpu(){
             std::cout<<" Error: in running kernel "<<ciErrNum<<std::endl;
         }
         
-                std::cout<<" ready to finish "<<i<<std::endl;
+        std::cout<<" ready to finish "<<i<<std::endl;
         
         clFinish(commandQueue);
         
-        std::cout<<" ready to read out "<<i<<std::endl;
+        //std::cout<<" ready to read out "<<i<<std::endl;
 
         
         ciErrNum = clEnqueueReadBuffer(commandQueue, output_data, CL_FALSE, 0, mem_size_output_data, data_out, NULL, NULL, &gpudone_event);
@@ -514,7 +514,7 @@ void pseudo_experiment::rungpu(){
             
         }
         
-        std::cout<<" ready to finish  "<<i<<std::endl;
+        //std::cout<<" ready to finish  "<<i<<std::endl;
 
         
         // this crashes it... why?
