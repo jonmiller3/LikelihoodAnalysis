@@ -247,6 +247,7 @@ char* oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* sz
     pFileStream = fopen(cFilename, "rb");
     if(pFileStream == 0)
     {
+      std::cout<<" falied to open file load program "<<cFilename<<std::endl;
         return NULL;
     }
 #endif
@@ -275,14 +276,14 @@ char* oclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* sz
         *szFinalLength = szSourceLength + szPreambleLength;
     }
     cSourceString[szSourceLength + szPreambleLength] = '\0';
-    
+
     return cSourceString;
 }
 
 
 // should should be after I initialize, but before I use the GPU devices
 // I need to do this once per device?
-int CompileOCLKernel(cl_device_id cdDevice, cl_context       cxGPUContext,
+int CompileOCLKernel(const cl_device_id* cdDevice, cl_context       cxGPUContext,
                      const char *ocl_source_filename, cl_program *cpProgram){
     
     
@@ -314,20 +315,62 @@ int CompileOCLKernel(cl_device_id cdDevice, cl_context       cxGPUContext,
     
     // I think I need to include the devices built here...
     //ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math -cl-nv-verbose", NULL, NULL);
-    ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
+
+    ciErrNum = clBuildProgram(*cpProgram, 2, cdDevice, "-cl-fast-relaxed-math -cl-nv-verbose", NULL, NULL);
+
+    //ciErrNum = clBuildProgram(*cpProgram, 0, NULL, "-cl-fast-relaxed-math", NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
         // write out standard error, Build Log and PTX, then return error
         std::cout<<" problem with building program"<<ciErrNum<<std::endl;
+	/*
+	size_t len;
+	char buffer[20480];
+	ciErrNum=clGetProgramBuildInfo(*cpProgram, cdDevice[devi], CL_PROGRAM_BUILD_LOG, NULL, NULL, &len);
+	ciErrNum=clGetProgramBuildInfo(*cpProgram, cdDevice[devi], CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
+	//std::cout<<" buffer result "<<buffer<<std::endl
+	std::cout<<" getting log result "<<ciErrNum<<std::endl;
+	printf("buffer is %s\n", buffer);
+	*/
+	clGetProgramBuildInfo(*cpProgram, cdDevice[0], CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
+	std::cout<<" build status "<<build_status<<std::endl;
+	//printf("%s\n", build_status);
+	//clGetProgramBuildInfo(*cpProgram, cdDevice, CL_PROGRAM_BUILD_OPTIONS, 2048*sizeof(char), buffer, &len);
+	//printf("%s\n", buffer);
+
     } else {
-        ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevice, CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
+        ciErrNum = clGetProgramBuildInfo(*cpProgram, cdDevice[0], CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);
         //shrLog("clGetProgramBuildInfo returned: ");
         if (build_status == CL_SUCCESS) {
-            std::cout<<"CL_SUCCESS"<<std::endl;
+            std::cout<<"CL_SUCCESS "<<ciErrNum<<" "<<build_status<<std::endl;
         } else {
             std::cout<<"CLErrorNumber = "<<ciErrNum<<std::endl;
         }
+	
+
+	/*
+
+size_t len;
+	char buffer[20480];
+	ciErrNum=clGetProgramBuildInfo(*cpProgram, cdDevice[0], CL_PROGRAM_BUILD_LOG, NULL, NULL, &len);
+	ciErrNum=clGetProgramBuildInfo(*cpProgram, cdDevice[0], CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
+	//std::cout<<" buffer result "<<buffer<<std::endl
+	std::cout<<" getting log result "<<ciErrNum<<std::endl;
+	printf("buffer is %s\n", buffer);
+	*/
+	
     }
+
+    size_t logSize;
+    char *programLog;
+    clGetProgramBuildInfo(*cpProgram, cdDevice[0],
+			  CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+    programLog = (char*) calloc (logSize+1, sizeof(char));
+    clGetProgramBuildInfo(*cpProgram, cdDevice[0],
+			  CL_PROGRAM_BUILD_LOG, logSize+1, programLog, NULL);
+    printf("Build failed; error=%d, status=%d, programLog:nn%s",ciErrNum, build_status, programLog);
+    free(programLog);
+
     
     // print out the build log, note in the case where there is nothing shown, some OpenCL PTX->SASS caching has happened
     /*

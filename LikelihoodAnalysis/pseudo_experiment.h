@@ -126,18 +126,24 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
 
 void pseudo_experiment::rungpu(){
     
-    #ifdef DOUBLEFAIL
-    std::cout<<" no doubles "<<std::endl;
-    float* data_out;
-#else
-    double* data_out;
-    std::cout<<" doubles! "<<std::endl;
-#endif
     
     // I could do everything here
     // I think that I hardcode it to do
     // n=4 loops
     
+
+        // I am going to think that there is 1024 total workgroups
+#ifdef DOUBLEFAIL
+    std::cout<<" no doubles "<<std::endl;
+    float* data_out;
+
+#else
+    double* data_out;
+    std::cout<<" doubles! "<<std::endl;
+#endif
+
+        
+
     
     // I am just putting everything here
     cl_command_queue commandQueue;
@@ -174,6 +180,7 @@ void pseudo_experiment::rungpu(){
 #else
     size_t  mem_size_input_data = sizeof(cl_double)*ncells*13;
 #endif
+
     
     cl_uint num_platforms;
     ciErrNum = clGetPlatformIDs (0, NULL, &num_platforms);
@@ -224,7 +231,7 @@ void pseudo_experiment::rungpu(){
             clGetDeviceInfo(cdDevices[i], CL_DEVICE_EXTENSIONS, sizeof(cDevicesExt[i]), &cDevicesExt[i], NULL);
             clGetDeviceInfo(cdDevices[i], CL_DEVICE_GLOBAL_MEM_SIZE, sizeof(cDevicesGlobalMem), &cDevicesGlobalMem, NULL);
             std::cout<<"> OpenCL Device "<<cDevicesName[i]<<", cl_device_id: "<<cdDevices[i]<<std::endl;
-            std::cout<<"> OpenCL Ext "<<cDevicesExt[i]<<", global mem: "<<cDevicesGlobalMem<<std::endl;
+            //std::cout<<"> OpenCL Ext "<<cDevicesExt[i]<<", global mem: "<<cDevicesGlobalMem<<std::endl;
         }
     }
     
@@ -244,11 +251,23 @@ void pseudo_experiment::rungpu(){
     if (ciErrNum != CL_SUCCESS)
     {
         std::cout<<" problem creating output buffer "<<std::endl;
-        //shrLog("Error: clCreateBuffer\n");
+
     }
     
-    
-    for (int i=1; i<ciDeviceCount; i++){
+
+        char* kernelname;
+        
+        std::string pPath = getenv ("HOME");
+        std::string basename = pPath+"/Dropbox/Geo_neutrinos/likelihood_analysis/LikelihoodAnalysis/";
+ 
+#ifdef __APPLE__
+        CompileOCLKernel(cdDevices, cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
+#else
+        CompileOCLKernel(cdDevices, cxGPUContext, "/user/m/miller/work/LikelihoodAnalysis/LikelihoodAnalysis/RunExperiment.cl", &program[i]);
+#endif
+        kernelname="RunExperiment";
+   
+    for (int i=0; i<ciDeviceCount; i++){
         
         commandQueue = 0;
         
@@ -258,28 +277,44 @@ void pseudo_experiment::rungpu(){
             std::cout<<" problem creating max command queue "<<ciErrNum<<std::endl;
         }
         
-        char* kernelname;
-        
-        std::string pPath = getenv ("HOME");
-        std::string basename = pPath+"/Dropbox/Geo_neutrinos/likelihood_analysis/LikelihoodAnalysis/";
-        
-        
-#ifdef __APPLE__
-        CompileOCLKernel(cdDevices[i], cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
-#else
-        CompileOCLKernel(cdDevices[i], cxGPUContext, "LikelihoodAnalysis/RunExperiment.cl", &program[i]);
-#endif
-        kernelname="RunExperiment";
+ 
         
   
-      
+	cl_build_status build_status;
+	ciErrNum = clGetProgramBuildInfo(program[i], cdDevices[i], CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status), &build_status, NULL);	
+
+        if (build_status == CL_SUCCESS) {
+	  std::cout<<" program is OK "<<std::endl;
+        } else {
+	  std::cout<<" program is not OK, CLErrorNumber "<<ciErrNum<<" "<<build_status<<std::endl;
+	  size_t logSize;
+	 char *programLog;
+	 clGetProgramBuildInfo(program[i], cdDevices[i], 
+			       CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+	 programLog = (char*) calloc (logSize+1, sizeof(char));
+	 clGetProgramBuildInfo(program[i], cdDevices[i], 
+			       CL_PROGRAM_BUILD_LOG, logSize+1, programLog, NULL);
+	 printf("Build failed; error=%d, status=%d, programLog:nn%s",ciErrNum, build_status, programLog);
+	 free(programLog);
+
+        }      
         
         
         kernel[i]= clCreateKernel(program[i], kernelname, &ciErrNum);
         if (ciErrNum != CL_SUCCESS) {
-            std::cout<<" problem with creating kernel "<<std::endl;
+	  std::cout<<program[i]<<std::endl;
+            std::cout<<" problem with creating kernel "<<ciErrNum<<std::endl;
         }
         
+
+#ifdef DOUBLEFAIL
+        size_t  mem_size_output_data=sizeof(cl_float)*512;
+	data_out  = (float*)malloc(mem_size_output_data);
+#else
+        size_t  mem_size_output_data=sizeof(cl_double)*512;
+	data_out = (double*)malloc(mem_size_output_data);;
+#endif
+
         
 
 
@@ -360,12 +395,13 @@ void pseudo_experiment::rungpu(){
         if (ciErrNum != CL_SUCCESS)
         {
             std::cout<<" Error: Failure to copy min buffer "<<std::endl;
-            //shrLog("clEnqueueCopyBuffer() Error: Failed to copy buffer!\n");
+
         }
 
 
         
         clFlush(commandQueue);
+
 
         
         
@@ -377,7 +413,7 @@ void pseudo_experiment::rungpu(){
         if (ciErrNum != CL_SUCCESS)
         {
             std::cout<<" problem creating buffer "<<std::endl;
-            //shrLog("Error: clCreateBuffer\n");
+
         }
 
         // sets the buffers
@@ -386,20 +422,16 @@ void pseudo_experiment::rungpu(){
         if (ciErrNum != CL_SUCCESS)
         {
             std::cout<<" problem creating buffer "<<std::endl;
-            //shrLog("Error: clCreateBuffer\n");
+
         }
-        
-        // I am going to think that there is 1024 total workgroups
-#ifdef DOUBLEFAIL
-        size_t  mem_size_output_data=sizeof(cl_float)*1024;
-#else
-        size_t  mem_size_output_data=sizeof(cl_double)*1024;
-#endif
         
         
         cl_mem output_data =
         clCreateBuffer(cxGPUContext, CL_MEM_WRITE_ONLY,  mem_size_output_data, NULL, &ciErrNum);
-        
+        if (ciErrNum != CL_SUCCESS)
+        {
+            std::cout<<" problem creating output buffer "<<std::endl;
+        }
         
         
         
@@ -448,6 +480,10 @@ void pseudo_experiment::rungpu(){
             std::cout<<" Error: Failure to copy buffer "<<std::endl;
             
         }
+
+	
+
+
         
         
         // let's get the size for the work items
@@ -456,7 +492,7 @@ void pseudo_experiment::rungpu(){
         ciErrNum = clGetDeviceInfo(cdDevices[i], CL_DEVICE_MAX_WORK_ITEM_SIZES, sizeof(workitem_size), &workitem_size, NULL);
         if (ciErrNum != CL_SUCCESS)
         {
-            // there is a problem
+
             std::cout<<" problem with work item size "<<ciErrNum<<std::endl;
         }
         
@@ -464,33 +500,40 @@ void pseudo_experiment::rungpu(){
         ciErrNum = clGetDeviceInfo(cdDevices[i], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxworkitem_size), &maxworkitem_size, NULL);
         if (ciErrNum != CL_SUCCESS)
         {
-            // there is a problem
-            std::cout<<" problem max size "<<ciErrNum<<std::endl;
+
+	  std::cout<<" problem max size "<<ciErrNum<<std::endl;
         }
         printf("what is max %lu",maxworkitem_size);
         
+
+	// some reason this doesn't work on cluster
+	
         size_t testworkgroup;
         ciErrNum = clGetKernelWorkGroupInfo(kernel[i], cdDevices[i], CL_KERNEL_WORK_GROUP_SIZE, sizeof(testworkgroup), &testworkgroup, NULL);
+	std::cout<<" here is kernel work group "<<ciErrNum<<std::endl;
         if (ciErrNum != CL_SUCCESS)
         {
             printf("Error: Failed to retrieve kernel work group info! %d\n", ciErrNum);
             
         }
         printf(" what is workgroup test %lu \n",testworkgroup);
+	
         size_t globalWorkSize[] = {maxworkitem_size, 1, 1};
-        size_t localWorkSize[] = {testworkgroup,1,1};
+        //size_t localWorkSize[] = {testworkgroup,1,1};
+        size_t localWorkSize[] = {1,1,1};
+
         
         
         printf("this is the worksize %lu %lu %lu \n",workitem_size[0],workitem_size[1],workitem_size[2]);
         printf("this is the local worksize %lu %lu %lu \n",
                localWorkSize[0],localWorkSize[1],localWorkSize[2]);
         printf("this is the global worksize %lu %lu %lu \n",
-               globalWorkSize[0],globalWorkSize[1],globalWorkSize[2]);
-        
+               globalWorkSize[0],globalWorkSize[1],globalWorkSize[2]);       
         
         // now we come to the point where it runs the kernel and gets the result
         std::cout<<" go device "<<i<<std::endl;
         
+	
         clFinish(commandQueue);
         ciErrNum=clEnqueueNDRangeKernel(commandQueue, kernel[i], 3, 0, globalWorkSize, localWorkSize,
                                         0, NULL, NULL);
@@ -504,9 +547,9 @@ void pseudo_experiment::rungpu(){
         
         clFinish(commandQueue);
         
-        //std::cout<<" ready to read out "<<i<<std::endl;
+        std::cout<<" ready to read out "<<i<<" "<<mem_size_output_data<<std::endl;        
 
-        
+
         ciErrNum = clEnqueueReadBuffer(commandQueue, output_data, CL_FALSE, 0, mem_size_output_data, data_out, NULL, NULL, &gpudone_event);
         if (ciErrNum != CL_SUCCESS)
         {
@@ -514,7 +557,7 @@ void pseudo_experiment::rungpu(){
             
         }
         
-        //std::cout<<" ready to finish  "<<i<<std::endl;
+       std::cout<<" finished  "<<i<<std::endl;
 
         
         // this crashes it... why?
