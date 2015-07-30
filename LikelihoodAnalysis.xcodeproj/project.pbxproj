@@ -9,12 +9,25 @@
 /* Begin PBXBuildFile section */
 		16957C701B5995FF007DCE7C /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16957C6F1B5995FF007DCE7C /* OpenCL.framework */; };
 		D07A2BE91B504E6D0033267D /* create_rtable.C in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BE81B504E6D0033267D /* create_rtable.C */; };
+		D0924DD61B69358A00FD0B1E /* RunExperiment.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0B2FCA81B534834000CA1F2 /* RunExperiment.cl */; };
+		D0924DD81B69358A00FD0B1E /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 16957C6F1B5995FF007DCE7C /* OpenCL.framework */; };
+		D0924DDE1B6935A500FD0B1E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D07A2BE11B504E580033267D /* main.cpp */; };
+		D0924DE01B6942B700FD0B1E /* RunExperiment2.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0924DDF1B6942B700FD0B1E /* RunExperiment2.cl */; };
 		D0B2FCA91B534834000CA1F2 /* RunExperiment.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0B2FCA81B534834000CA1F2 /* RunExperiment.cl */; };
 		D0D48F4F1B52F0530028F9E3 /* VectorAdd.cl in Sources */ = {isa = PBXBuildFile; fileRef = D0D48F4E1B52F0530028F9E3 /* VectorAdd.cl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		D07A2BDC1B504E580033267D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D0924DD91B69358A00FD0B1E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -36,6 +49,8 @@
 		D07A2BF61B505A460033267D /* pdf_result_mle.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = pdf_result_mle.root; sourceTree = "<group>"; };
 		D07A2BF71B5067860033267D /* Helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Helper.cpp; sourceTree = "<group>"; };
 		D07A2BF81B5067860033267D /* Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Helper.h; sourceTree = "<group>"; };
+		D0924DDD1B69358A00FD0B1E /* LikelihoodAnalysis copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "LikelihoodAnalysis copy"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0924DDF1B6942B700FD0B1E /* RunExperiment2.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = RunExperiment2.cl; sourceTree = "<group>"; };
 		D0B2FCA81B534834000CA1F2 /* RunExperiment.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = RunExperiment.cl; sourceTree = "<group>"; };
 		D0D48F4E1B52F0530028F9E3 /* VectorAdd.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = VectorAdd.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -46,6 +61,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				16957C701B5995FF007DCE7C /* OpenCL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0924DD71B69358A00FD0B1E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0924DD81B69358A00FD0B1E /* OpenCL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -66,6 +89,7 @@
 			isa = PBXGroup;
 			children = (
 				D07A2BDE1B504E580033267D /* LikelihoodAnalysis */,
+				D0924DDD1B69358A00FD0B1E /* LikelihoodAnalysis copy */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +106,7 @@
 				D07A2BE81B504E6D0033267D /* create_rtable.C */,
 				D07A2BEC1B504E930033267D /* sens.C */,
 				D07A2BE11B504E580033267D /* main.cpp */,
+				D0924DDF1B6942B700FD0B1E /* RunExperiment2.cl */,
 			);
 			path = LikelihoodAnalysis;
 			sourceTree = "<group>";
@@ -122,6 +147,23 @@
 			productReference = D07A2BDE1B504E580033267D /* LikelihoodAnalysis */;
 			productType = "com.apple.product-type.tool";
 		};
+		D0924DD21B69358A00FD0B1E /* RatioLikelihoodAnalysis */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D0924DDA1B69358A00FD0B1E /* Build configuration list for PBXNativeTarget "RatioLikelihoodAnalysis" */;
+			buildPhases = (
+				D0924DD31B69358A00FD0B1E /* Sources */,
+				D0924DD71B69358A00FD0B1E /* Frameworks */,
+				D0924DD91B69358A00FD0B1E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RatioLikelihoodAnalysis;
+			productName = LikelihoodAnalysis;
+			productReference = D0924DDD1B69358A00FD0B1E /* LikelihoodAnalysis copy */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -153,6 +195,7 @@
 			targets = (
 				D07A2BDD1B504E580033267D /* LikelihoodAnalysis */,
 				D07A2BEE1B504EED0033267D /* StartROOT */,
+				D0924DD21B69358A00FD0B1E /* RatioLikelihoodAnalysis */,
 			);
 		};
 /* End PBXProject section */
@@ -164,7 +207,17 @@
 			files = (
 				D07A2BE91B504E6D0033267D /* create_rtable.C in Sources */,
 				D0D48F4F1B52F0530028F9E3 /* VectorAdd.cl in Sources */,
+				D0924DE01B6942B700FD0B1E /* RunExperiment2.cl in Sources */,
 				D0B2FCA91B534834000CA1F2 /* RunExperiment.cl in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0924DD31B69358A00FD0B1E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0924DDE1B6935A500FD0B1E /* main.cpp in Sources */,
+				D0924DD61B69358A00FD0B1E /* RunExperiment.cl in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,6 +409,92 @@
 			};
 			name = Release;
 		};
+		D0924DDB1B69358A00FD0B1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/**",
+					"$(PROJECT_DIR)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/root/5.34.26/include/root,
+				);
+				LD_RUNPATH_SEARCH_PATHS = /usr/local/Cellar/root/5.34.26;
+				LIBRARY_SEARCH_PATHS = (
+					"/usr/local/Cellar/root/5.34.26/lib/**",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-lGui",
+					"-lCore",
+					"-lCint",
+					"-lRIO",
+					"-lNet",
+					"-lHist",
+					"-lGraf",
+					"-lGraf3d",
+					"-lGpad",
+					"-lTree",
+					"-lRint",
+					"-lPostscript",
+					"-lMatrix",
+					"-lPhysics",
+					"-lMathCore",
+					"-lThread",
+					"-lpthread",
+					"-lm",
+					"-ldl",
+				);
+				PRODUCT_NAME = "LikelihoodAnalysis copy";
+			};
+			name = Debug;
+		};
+		D0924DDC1B69358A00FD0B1E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/**",
+					"$(PROJECT_DIR)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/local/Cellar/root/5.34.26/include/root,
+				);
+				LD_RUNPATH_SEARCH_PATHS = /usr/local/Cellar/root/5.34.26;
+				LIBRARY_SEARCH_PATHS = (
+					"/usr/local/Cellar/root/5.34.26/lib/**",
+					"$(inherited)",
+				);
+				OTHER_LDFLAGS = (
+					"-lGui",
+					"-lCore",
+					"-lCint",
+					"-lRIO",
+					"-lNet",
+					"-lHist",
+					"-lGraf",
+					"-lGraf3d",
+					"-lGpad",
+					"-lTree",
+					"-lRint",
+					"-lPostscript",
+					"-lMatrix",
+					"-lPhysics",
+					"-lMathCore",
+					"-lThread",
+					"-lpthread",
+					"-lm",
+					"-ldl",
+				);
+				PRODUCT_NAME = "LikelihoodAnalysis copy";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -382,6 +521,15 @@
 			buildConfigurations = (
 				D07A2BF01B504EED0033267D /* Debug */,
 				D07A2BF11B504EED0033267D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D0924DDA1B69358A00FD0B1E /* Build configuration list for PBXNativeTarget "RatioLikelihoodAnalysis" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D0924DDB1B69358A00FD0B1E /* Debug */,
+				D0924DDC1B69358A00FD0B1E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

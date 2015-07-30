@@ -6,6 +6,9 @@
 #include <thread>
 #include "lmu.h"
 
+#include "TFile.h"
+#include "TTree.h"
+
 #include "Helper.h"
 //class lmu;
 
@@ -81,8 +84,44 @@ class pseudo_experiment{
   double getlogr(){double calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   model* getrange(map<model,double>);
+    void writerootfile(string);
 
 };
+
+void pseudo_experiment::writerootfile(string name){
+    
+    TFile *f = new TFile(name.c_str(),"recreate");
+    
+    TTree* datatree = new TTree("T","Tree");
+    
+    model mu;
+    double r;
+    
+    datatree->Branch("model",&mu,"Ucrust/D:Uocean:Ucore:Umantle:Thcrust:Thocean:Thcore:Thmantle:Kcrust:Kocean:Kcore:Kmantle");
+    datatree->Branch("ratio",&r,"ratio/D");
+    
+    
+    vector<double>::iterator it;
+    vector<model>::iterator it_mu=mu_set.begin();
+    
+    for (it=lt_set.begin(); it!=lt_set.end(); ++it,++it_mu){
+        
+       r = *it - maxl;
+        mu=*it_mu;
+        //std::cout<<" r "<<r<<" "<<*it<<" "<<maxl<<std::endl;
+        datatree->Fill();
+        
+    }
+    
+    f->Write();
+    f->Close();
+    
+    
+    
+    
+    
+    return;
+}
 
 pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
   nobs=n;
@@ -261,9 +300,9 @@ void pseudo_experiment::rungpu(){
         std::string basename = pPath+"/Dropbox/Geo_neutrinos/likelihood_analysis/LikelihoodAnalysis/";
  
 #ifdef __APPLE__
-        CompileOCLKernel(cdDevices, cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), &program[i]);
+        CompileOCLKernel(cdDevices, cxGPUContext, (basename+"/LikelihoodAnalysis/RunExperiment.cl").c_str(), program);
 #else
-        CompileOCLKernel(cdDevices, cxGPUContext, "/user/m/miller/work/LikelihoodAnalysis/LikelihoodAnalysis/RunExperiment.cl", &program[i]);
+        CompileOCLKernel(cdDevices, cxGPUContext, "/user/m/miller/work/LikelihoodAnalysis/LikelihoodAnalysis/RunExperiment.cl", program);
 #endif
         kernelname="RunExperiment";
    
@@ -586,6 +625,8 @@ void pseudo_experiment::run(bool createvector=false){
 
     double np=2.;
     
+    int ncells=plmu->getncells();
+    
     tval[0]=1;
     
     for (int iUcore=-np; iUcore<np; iUcore++){
@@ -628,20 +669,24 @@ void pseudo_experiment::run(bool createvector=false){
                                                     tval[12]=mutest.Kocean;
                    
                                                     // slower way?
-			      double lt;
+			      //double lt;
 			      //data_in_bins=plmu->calc(phi,energy,theta,mutest,nobs,lt);
                                           
                                                     
                                                     // faster way?
                                                     double l=0;
-                                                    int ncells=plmu->getncells();
+
                                                     
                                                     for (int i=0; i<nobs; i++){
                                                         
                                                         float content=0;
+                                                        if (model_in_bins[data_in_bins[i]]!=(plmu->getfb())->GetBinContent(data_in_bins[i])) {
+                                                            std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
+                                                        }
                                                         for (int modelnumber=0; modelnumber<13; modelnumber++){
                                                             content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
-                                                            //cout<<" l steps "<<content<<" step "<<modelnumber*ncells+data_in_bins[i]<<" modelval "<<tval[modelnumber]<<" mnum "<<modelnumber<<endl;
+                                                            //if (modelnumber*ncells+data_in_bins[i]<274&&modelnumber*ncells+data_in_bins[i]>156) cout<<" l steps "<<content<<" step "<<modelnumber*ncells+data_in_bins[i]<<" modelval "<<tval[modelnumber]<<" mnum "<<modelnumber<<" i is "<<i<<endl;
+                                                            
                                                         }
                                                         if (content!=0) {
                                                             //cout<<" l content "<<content<<" at bin "<<data_in_bins[i]<<endl;
@@ -663,8 +708,9 @@ void pseudo_experiment::run(bool createvector=false){
                                                     }
                                                     //cout<<" here is lt "<<lt<<" here is l "<<l<<endl;
                                                     
-			      if (lt>maxl||i==0){
-				maxl=lt;
+			      if (l>maxl||i==0){
+                      
+				maxl=l;
 				maxmu=mutest;
 			      }
 			      i++;

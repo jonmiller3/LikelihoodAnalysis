@@ -234,7 +234,21 @@ Int_t TH3FSpec::GetRandom3Spec(int seed)
     
     Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
     
-    return ibin;
+    Int_t binz = ibin/nxy;
+    
+    Int_t biny = (ibin - nxy*binz)/nbinsx;
+    Int_t binx = ibin - nbinsx*(biny + nbinsy*binz);
+    
+    
+    Double_t x = fXaxis.GetBinLowEdge(binx+1);
+    if (r1 > fIntegral[ibin]) x +=
+    fXaxis.GetBinWidth(binx+1)*(r1-fIntegral[ibin])/(fIntegral[ibin+1] - fIntegral[ibin]);
+    
+    Double_t y = fYaxis.GetBinLowEdge(biny+1) + fYaxis.GetBinWidth(biny+1)*rndm3.Rndm();
+    Double_t z = fZaxis.GetBinLowEdge(binz+1) + fZaxis.GetBinWidth(binz+1)*rndm3.Rndm();
+    
+    Int_t resbin = GetBin(x,y,z);
+    return resbin;
     
     
 }

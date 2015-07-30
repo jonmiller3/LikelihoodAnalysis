@@ -71,10 +71,10 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
                 tval[5]=(np+iThcore);
                 for (int iThmantle=-np; iThmantle<np; iThmantle++){
                     tval[6]=t0val[6]*(1+iThmantle/np);
-                //    for (int iThcrust=-np; iThcrust<np; iThcrust++){
-                    //    tval[7]=t0val[7]*(1+iThcrust/np);
-                //       for (int iThocean=-np; iThocean<np; iThocean++){
-            //                tval[8]=t0val[8]*(1+iThocean/np);
+                    for (int iThcrust=-np; iThcrust<np; iThcrust++){
+                        tval[7]=t0val[7]*(1+iThcrust/np);
+                       for (int iThocean=-np; iThocean<np; iThocean++){
+                            tval[8]=t0val[8]*(1+iThocean/np);
     
     for (int iKcore=-np; iKcore<np; iKcore++){
         tval[9]=(np+iKcore)*1e4;
@@ -112,8 +112,8 @@ kernel void RunExperiment(global const double* pdf, constant int* data, constant
     }
     
               //         }
-        //    }
-         //      }
+            }
+               }
           //          }
                 }
             }

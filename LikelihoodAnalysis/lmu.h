@@ -144,6 +144,7 @@ public:
     
     // but I think that double* is better?
     float* getmodelarray();
+    TH3FSpec* getfb(){return fb;}
     
     
 };
@@ -151,7 +152,12 @@ public:
 // but I think I want double*
 float* lmu::getmodelarray(){
     
+    // problem is that there are underflow and overflow bins here
     int ncells = fb->GetNCells();
+    
+    
+    // OK, this is what has to be fixed, it is 12x12x12 not 10x10x10
+    std::cout<<" test ncells "<<ncells<<" test bins "<<fb->GetNbinsX()<<std::endl;
     
     // I think that doing this is unncessary
     const float* barray = fb->GetArray();
