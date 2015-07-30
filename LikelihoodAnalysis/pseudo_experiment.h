@@ -623,7 +623,7 @@ void pseudo_experiment::run(bool createvector=false){
     
     double tval[13];
 
-    double np=2.;
+    double np=4.;
     
     int ncells=plmu->getncells();
     
@@ -680,9 +680,11 @@ void pseudo_experiment::run(bool createvector=false){
                                                     for (int i=0; i<nobs; i++){
                                                         
                                                         float content=0;
+                                                        /*
                                                         if (model_in_bins[data_in_bins[i]]!=(plmu->getfb())->GetBinContent(data_in_bins[i])) {
                                                             std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
                                                         }
+                                                         */
                                                         for (int modelnumber=0; modelnumber<13; modelnumber++){
                                                             content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
                                                             //if (modelnumber*ncells+data_in_bins[i]<274&&modelnumber*ncells+data_in_bins[i]>156) cout<<" l steps "<<content<<" step "<<modelnumber*ncells+data_in_bins[i]<<" modelval "<<tval[modelnumber]<<" mnum "<<modelnumber<<" i is "<<i<<endl;

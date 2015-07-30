@@ -109,7 +109,7 @@ int main(int argc, char ** argv) {
     pseudo_experiment* pseudo=0;
     for (int i=0; i<nexp; i++){
         pseudo=0;
-        pseudo = new pseudo_experiment(nev*10,testmu,ltotal);
+        pseudo = new pseudo_experiment(nev,testmu,ltotal);
         pseudo->run(true);
         pseudo->writerootfile(outputfile);
         //delete pseudo;
