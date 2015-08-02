@@ -137,6 +137,7 @@ public:
     ~lmu(){delete fb;}
 
     int* calc(double*, double*, double*, model, int, float&);
+    int calc(int*, model, int, float&);
   int* getrandom(model,int,double*, double*, double*);
   int* getrandom(model,int);
     
@@ -146,6 +147,8 @@ public:
     float* getmodelarray();
     TH3FSpec* getfb(){return fb;}
     TH3FSpec* getfs1(){return fs.Ucore;}
+    
+    double getintegral(model);
     
     
 };
@@ -263,6 +266,56 @@ int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, fl
     
 }
 
+
+int lmu::calc(int* binres, model mu, int nobs, float& totalcontent){
+    
+    ft=0;
+    
+    ft = new TH3FSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
+    
+    ft->Add(fs.Ucore,fb,mu.Ucore,1);
+    ft->AddFast(fs.Umantle,ft,mu.Umantle,1);
+    ft->AddFast(fs.Ucrust,ft,mu.Ucrust,1);
+    ft->AddFast(fs.Uocean,ft,mu.Uocean,1);
+    
+    
+    ft->AddFast(fs.Thcore,ft,mu.Thcore,1);
+    ft->AddFast(fs.Thmantle,ft,mu.Thmantle,1);
+    ft->AddFast(fs.Thcrust,ft,mu.Thcrust,1);
+    ft->AddFast(fs.Thocean,ft,mu.Thocean,1);
+    
+    ft->AddFast(fs.Kcore,ft,mu.Kcore,1);
+    ft->AddFast(fs.Kmantle,ft,mu.Kmantle,1);
+    ft->AddFast(fs.Kcrust,ft,mu.Kcrust,1);
+    ft->AddFast(fs.Kocean,ft,mu.Kocean,1);
+    
+    totalcontent=0;
+    for (int i=0; i<nobs; i++){
+        
+
+        
+        double content = ft->GetBinContent(binres[i]);
+        
+        if (content!=0) {
+            
+            content = TMath::Log(content);
+            
+            
+        } else {
+            cout<<" test content "<<content<<" at bin "<<binres[i]<<endl;
+            content = -1000;
+        }
+        
+        totalcontent+=content;
+    }
+    
+    delete ft;
+    //return totalcontent;
+    
+    return 1;
+    
+}
+
 int* lmu::getrandom(model mu, int nobs, double* phi, double* energy, double* theta){
     int* binres = new int[nobs];
 
@@ -314,7 +367,41 @@ return binres;
 
 }
 
+double lmu::getintegral(model mu){
+    
+    double res=0;
+    
+    
+    
+    ft=0;
+    ft = new TH3FSpec("ft","ft",nbinsx,0,maxx,nbinsy,0,maxy,nbinsz,0,maxz);
+    
+    
+    ft->Add(fs.Ucore,fb,mu.Ucore,1);
+    ft->AddFast(fs.Umantle,ft,mu.Umantle,1);
+    ft->AddFast(fs.Ucrust,ft,mu.Ucrust,1);
+    ft->AddFast(fs.Uocean,ft,mu.Uocean,1);
+    
+    
+    ft->AddFast(fs.Thcore,ft,mu.Thcore,1);
+    ft->AddFast(fs.Thmantle,ft,mu.Thmantle,1);
+    ft->AddFast(fs.Thcrust,ft,mu.Thcrust,1);
+    ft->AddFast(fs.Thocean,ft,mu.Thocean,1);
+    
+    ft->AddFast(fs.Kcore,ft,mu.Kcore,1);
+    ft->AddFast(fs.Kmantle,ft,mu.Kmantle,1);
+    ft->AddFast(fs.Kcrust,ft,mu.Kcrust,1);
+    ft->AddFast(fs.Kocean,ft,mu.Kocean,1);
+    
+    res=ft->Integral();
+    
+    delete ft;
+    
+    return res;
+}
 
+
+// doesn't work
 int* lmu::getrandom(model mu, int nobs){
     
     int* res=new int[nobs];

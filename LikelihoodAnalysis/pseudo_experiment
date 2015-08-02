@@ -28,9 +28,7 @@
 #else
 #include <stdio.h>
 #include <string.h>
-#ifdef USEOPENCL
 #include "CL/cl.h"
-#endif
 #define FALSE false
 #define TRUE true
 #endif
@@ -84,9 +82,7 @@ class pseudo_experiment{
  public:
   pseudo_experiment(int, model, lmu*);
   void run(bool);
-#ifdef USEOPENCL
     void rungpu();
-#endif
   double getlogr(){float calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   model* getrange(map<model,double>);
@@ -169,7 +165,7 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
     
     
 }
-#ifdef USEOPENCL
+
 void pseudo_experiment::rungpu(){
     
     
@@ -620,7 +616,6 @@ void pseudo_experiment::rungpu(){
     
     
 }
-#endif
 
 void pseudo_experiment::run(bool createvector=false){
   

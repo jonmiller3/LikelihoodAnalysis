@@ -102,19 +102,10 @@ int main(int argc, char **argv){
   TH3FSpec* bpdf = (TH3FSpec*)signalfile->Get("finalpdf_sun");
   
   lmu* ltotal = new lmu(spdf,bpdf);
-  int numexp = 1;
+  int numexp = 1000;
 
   ofstream myfile;
   myfile.open(outputcritfile.c_str(),ios::app);
-
-  double nevents = bpdf->Integral();
-    
-    // nev should be the null number of events
-  int nev = (int)nevents+1;
-
-
-    
-  //bpdf->Scale(1./nevents);
 
     // make things easier
     model testmu;
@@ -133,7 +124,14 @@ int main(int argc, char **argv){
     testmu.Kcrust=testKcrust;
     testmu.Kocean=testKocean;
     
-  // was 100
+    double nevents = ltotal->getintegral(testmu);
+    // nev should be the null number of events
+    int nev = (int)nevents+1;
+    
+    cout<<" number of events "<<nev<<endl;
+    
+    //bpdf->Scale(1./nevents);
+    
     double rcrit = calculatercrit(nev,testmu,ltotal,numexp,outputrfile);
 
   myfile<<testmu.Ucore<<" "<<testmu.Umantle<<" "<<testmu.Ucrust<<" "<<testmu.Uocean<<" "<<testmu.Thcore<<" "<<testmu.Thmantle<<" "<<testmu.Thcrust<<" "<<testmu.Thocean<<" "<<testmu.Kcore<<" "<<testmu.Kmantle<<" "<<testmu.Kcrust<<" "<<testmu.Kocean<<" "<<rcrit<<" \n";
