@@ -233,6 +233,7 @@ Int_t TH3FSpec::GetRandom3Spec(int seed)
     Double_t r1 = rndm3.Rndm();
     
     Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
+    //return ibin;
     
     Int_t binz = ibin/nxy;
     

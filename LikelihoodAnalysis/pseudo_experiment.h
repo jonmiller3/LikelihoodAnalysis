@@ -81,7 +81,7 @@ class pseudo_experiment{
   pseudo_experiment(int, model, lmu*);
   void run(bool);
     void rungpu();
-  double getlogr(){double calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
+  double getlogr(){float calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   model* getrange(map<model,double>);
     void writerootfile(string);
@@ -133,11 +133,12 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
     phi = new double[nobs];
     theta = new double[nobs];
 
-  plmu->getrandom(mu_true,nobs,phi,energy,theta);
+    // this gets all?
+  data_in_bins=plmu->getrandom(mu_true,nobs,phi,energy,theta);
     
     
     // this is another way
-    data_in_bins=plmu->getrandom(mu_true, nobs);
+    //data_in_bins=plmu->getrandom(mu_true, nobs);
     
     // another way to do memory
     model_in_bins=plmu->getmodelarray();
@@ -618,7 +619,7 @@ void pseudo_experiment::run(bool createvector=false){
   
     model mu=maxmu;
     model mutest;
-    // I think that I need to do 12 loops
+    // I think that I need to do 5.5 loops
     int i=0;
     
     double tval[13];
@@ -629,107 +630,122 @@ void pseudo_experiment::run(bool createvector=false){
     
     tval[0]=1;
     
-    for (int iUcore=-np; iUcore<np; iUcore++){
-        mutest.Ucore=(np+iUcore);
-        tval[1]=(np+iUcore);
-        for (int iUmantle=-np; iUmantle<np; iUmantle++){
-            mutest.Umantle=mu.Umantle*(1+iUmantle/np);
-            tval[2]=mu.Umantle*(1+iUmantle/np);
-            for (int iUcrust=-np; iUcrust<np; iUcrust++){
-                mutest.Ucrust=mu.Ucrust*(1+iUcrust/np);
-                tval[3]=mutest.Ucrust;
-                for (int iUocean=-np; iUocean<np; iUocean++){
-                    mutest.Uocean=mu.Uocean*(1+iUocean/np);
-                    tval[4]=mutest.Uocean;
-                    for (int iThcore=-np; iThcore<np; iThcore++){
-                        mutest.Thcore=(np+iThcore);
-                        for (int iThmantle=-np; iThmantle<np; iThmantle++){
-                            mutest.Thmantle=mu.Thmantle*(1+iThmantle/np);
-                            for (int iThcrust=-np; iThcrust<np; iThcrust++){
-                                mutest.Thcrust=mu.Thcrust*(1+iThcrust/np);
-                                for (int iThocean=-np; iThocean<np; iThocean++){
-                                    mutest.Thocean=mu.Thocean*(1+iThocean/np);
-                                    for (int iKcore=-np; iKcore<np; iKcore++){
-                                        mutest.Kcore=(np+iKcore)*1e4;
-                                        for (int iKmantle=-np; iKmantle<np; iKmantle++){
-                                            mutest.Kmantle=mu.Kmantle*(1+iKmantle/np);
-                                            for (int iKcrust=-np; iKcrust<np; iKcrust++){
-                                                mutest.Kcrust=mu.Kcrust*(1+iKcrust/np);
-                                                for (int iKocean=-np; iKocean<np; iKocean++){
-                                                    
-                                                    mutest.Kocean=mu.Kocean*(1+iKocean/np);
-                                                    
-                          tval[5]=mutest.Thcore;
-                                                    tval[6]=mutest.Thmantle;
-                                                    tval[7]=mutest.Thcrust;
-                                                    tval[8]=mutest.Thocean;
-                                                    tval[9]=mutest.Kcore;
-                                                    tval[10]=mutest.Kmantle;
-                                                    tval[11]=mutest.Kcrust;
-                                                    tval[12]=mutest.Kocean;
-                   
-                                                    // slower way?
-			      //double lt;
-			      //data_in_bins=plmu->calc(phi,energy,theta,mutest,nobs,lt);
-                                          
-                                                    
-                                                    // faster way?
-                                                    double l=0;
+    
+    for (int Pcore=0; Pcore<np; Pcore++){
+        for (int Pmantle=-np; Pmantle<np; Pmantle++){
+            for (int Pocean=-np; Pocean<np; Pocean++){
+                for (int iUcrust=-np; iUcrust<np; iUcrust++){
+                    for (int iThcrust=-np; iThcrust<np; iThcrust++){
+                        for (int iKcrust=-np; iKcrust<np; iKcrust++){
+                            mutest.Ucore=Pcore/np*mu.Umantle;
+                            mutest.Kcore=Pcore/np*mu.Kmantle;
+                            mutest.Thcore=Pcore/np*mu.Thmantle;
+                            
+                            mutest.Thmantle=(np+Pmantle)/np*mu.Thmantle;
+                            mutest.Umantle=(np+Pmantle)/np*mu.Umantle;
+                            mutest.Kmantle=(np+Pmantle)/np*mu.Kmantle;
 
-                                                    
-                                                    for (int i=0; i<nobs; i++){
-                                                        
-                                                        float content=0;
-                                                        /*
-                                                        if (model_in_bins[data_in_bins[i]]!=(plmu->getfb())->GetBinContent(data_in_bins[i])) {
-                                                            std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
-                                                        }
-                                                         */
-                                                        for (int modelnumber=0; modelnumber<13; modelnumber++){
-                                                            content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
-                                                            //if (modelnumber*ncells+data_in_bins[i]<274&&modelnumber*ncells+data_in_bins[i]>156) cout<<" l steps "<<content<<" step "<<modelnumber*ncells+data_in_bins[i]<<" modelval "<<tval[modelnumber]<<" mnum "<<modelnumber<<" i is "<<i<<endl;
-                                                            
-                                                        }
-                                                        if (content!=0) {
-                                                            //cout<<" l content "<<content<<" at bin "<<data_in_bins[i]<<endl;
-                                                            content = TMath::Log(content);
-                                                            
-                                                        } else {
-                                                            content = -1000;
-                                                        }
-                                                        
-                                                        l+=(double)content;
-                                                        
-                                                    }
-                  // these are 50% of the use?
-                                                    // all I need is the maximum, I do not need the full set
-                                                    // I can even just have a setting that I turn on/off
-                                                    if (createvector){
-			      lt_set.push_back(l);
-			      mu_set.push_back(mutest);
-                                                    }
-                                                    //cout<<" here is lt "<<lt<<" here is l "<<l<<endl;
-                                                    
-			      if (l>maxl||i==0){
-                      
-				maxl=l;
-				maxmu=mutest;
-			      }
-			      i++;
-                              
-			    }
-			  }
-			}
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
+                            mutest.Thcrust=(np+iThcrust)/np*mu.Thcrust;
+                            mutest.Ucrust=(np+iUcrust)/np*mu.Ucrust;
+                            mutest.Kcrust=(np+iKcrust)/np*mu.Kcrust;
+                            
+                            mutest.Thocean=(np+Pocean)/np*mutest.Thocean;
+                            mutest.Uocean=(np+Pocean)/np*mutest.Uocean;
+                            mutest.Kocean=(np+Pocean)/np*mutest.Kocean;
+                            
+                            tval[1]=mutest.Ucore;
+                            tval[2]=mutest.Umantle;
+                            tval[3]=mutest.Ucrust;
+                            tval[4]=mutest.Uocean;
+
+                            tval[5]=mutest.Thcore;
+                            tval[6]=mutest.Thmantle;
+                            tval[7]=mutest.Thcrust;
+                            tval[8]=mutest.Thocean;
+                            
+                            tval[9]=mutest.Kcore;
+                            tval[10]=mutest.Kmantle;
+                            tval[11]=mutest.Kcrust;
+                            tval[12]=mutest.Kocean;
+                
+                            double l=0;
+                            
+                            
+                            for (int i=0; i<nobs; i++){
+                                
+                                float content=0;
+                                for (int modelnumber=0; modelnumber<13; modelnumber++){
+                                    content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
+                            
+                                    /*
+                                    if (model_in_bins[data_in_bins[i]]!=(plmu->getfb())->GetBinContent(data_in_bins[i])) {
+                                        std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
+                                    }
+                                     */
+                                    
+                                    
+                                    
+                                    /*
+                                     if (model_in_bins[data_in_bins[i]+1*ncells]!=(plmu->getfs1())->GetBinContent(data_in_bins[i])) {
+                                         std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]+1*ncells]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
+                                     }
+                                     */
+                        
+                                    
+                                }
+                                
+                                if (content!=0) {
+                                    //cout<<" l content "<<content<<" at bin "<<data_in_bins[i]<<endl;
+                                    content = TMath::Log(content);
+                                    
+                                } else {
+                                    cout<<" content "<<content<<" bin "<<data_in_bins[i]<<" "<<model_in_bins[data_in_bins[i]+1*ncells]<<endl;
+                                    content = -1000;
+                                }
+                                
+                                
+
+                                
+                                l+=(double)content;
+                                
+                            }
+                            
+                            
+                            
+                            
+                            float calcres;
+                            plmu->calc(phi,energy,theta,mutest,nobs,calcres);
+                            if (calcres!=l) cout<<" problem "<<calcres<<" "<<l<<endl;
+
+                            
+                            
+                            
+                            if (createvector){
+                                lt_set.push_back(l);
+                                mu_set.push_back(mutest);
+                            }
+                            //cout<<" here is lt "<<lt<<" here is l "<<l<<endl;
+                            
+                            if (l>maxl||i==0){
+                                //if (i!=0) cout<<" new max "<<maxl<<" "<<l<<endl;
+                                maxl=l;
+                                maxmu=mutest;
+                            }
+                            i++;
+                            
+                            
+                        }
+                    }
+                }
+            }
         }
+    
     }
+    
+    cout<<" max is "<<maxl<<endl;
+    
 
+    
   return;
 
 }

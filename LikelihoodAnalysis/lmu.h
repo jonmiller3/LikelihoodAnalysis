@@ -136,8 +136,8 @@ public:
 
     ~lmu(){delete fb;}
 
-    int* calc(double*, double*, double*, model, int, double&);
-  int getrandom(model,int,double*, double*, double*);
+    int* calc(double*, double*, double*, model, int, float&);
+  int* getrandom(model,int,double*, double*, double*);
   int* getrandom(model,int);
     
     int getncells(){return fb->GetNCells();}
@@ -145,6 +145,7 @@ public:
     // but I think that double* is better?
     float* getmodelarray();
     TH3FSpec* getfb(){return fb;}
+    TH3FSpec* getfs1(){return fs.Ucore;}
     
     
 };
@@ -157,7 +158,7 @@ float* lmu::getmodelarray(){
     
     
     // OK, this is what has to be fixed, it is 12x12x12 not 10x10x10
-    std::cout<<" test ncells "<<ncells<<" test bins "<<fb->GetNbinsX()<<std::endl;
+    //std::cout<<" test ncells "<<ncells<<" test bins "<<fb->GetNbinsX()<<std::endl;
     
     // I think that doing this is unncessary
     const float* barray = fb->GetArray();
@@ -198,7 +199,7 @@ float* lmu::getmodelarray(){
 }
 
 
-int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, double& totalcontent){
+int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, float& totalcontent){
   
     int* binres = new int[nobs];
     
@@ -236,12 +237,12 @@ int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, do
     double content = ft->GetBinContent(bin);
 
     if (content!=0) {
-        //cout<<" test content "<<content<<" at bin "<<bin<<endl;
         
         content = TMath::Log(content);
         
         
     } else {
+        cout<<" test content "<<content<<" at bin "<<bin<<endl;
       content = -1000;
     }
 
@@ -262,7 +263,8 @@ int* lmu::calc(double* phi, double* energy,double* theta, model mu, int nobs, do
     
 }
 
-int lmu::getrandom(model mu, int nobs, double* phi, double* energy, double* theta){
+int* lmu::getrandom(model mu, int nobs, double* phi, double* energy, double* theta){
+    int* binres = new int[nobs];
 
 
   ft=0;
@@ -296,12 +298,19 @@ int lmu::getrandom(model mu, int nobs, double* phi, double* energy, double* thet
       energy[i]=(out2);
       theta[i]=(out3);
 
+      // I need to check order on this
+      int binx=1+(int)(phi[i]*nbinsx/maxx);
+      int biny=1+(int)((energy[i])*nbinsy/(maxy));
+      int binz=1+(int)((theta[i])*nbinsz/(maxz));
+      int bin = ft->GetBin(binx,biny,binz);
+      
+      binres[i]=bin;
 
 
   }
 
   delete ft;
-  return 1;
+return binres;
 
 }
 

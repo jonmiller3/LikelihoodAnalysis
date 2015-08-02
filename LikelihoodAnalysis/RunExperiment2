@@ -10,9 +10,9 @@
 
 // float or double?
 #ifdef DOUBLEFAIL
-kernel void RunExperiment2(global const float* pdf, constant int* data, constant int* inputs, global const float* t0val, global float* llh)
+kernel void RunExperiment(global const float* pdf, constant int* data, constant int* inputs, global const float* t0val, global float* llh)
 #else
-kernel void RunExperiment2(global const double* pdf, constant int* data, constant int* inputs, global const float* t0val, global double* llh)
+kernel void RunExperiment(global const double* pdf, constant int* data, constant int* inputs, global const float* t0val, global double* llh)
 #endif
 {
    
