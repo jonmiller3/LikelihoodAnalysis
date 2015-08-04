@@ -89,7 +89,7 @@ class pseudo_experiment{
 #endif
   double getlogr(){float calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
-  model* getrange(map<model,double>);
+  vector<model> getrange(map<model,double>);
     void writerootfile(string);
 
 };
@@ -757,10 +757,10 @@ void pseudo_experiment::run(bool createvector=false){
 
 }
 
-model* pseudo_experiment::getrange(map<model,double> rcrit){
+vector<model> pseudo_experiment::getrange(map<model,double> rcrit){
 
-  model* out = new model[2];
-  vector<double>::iterator it;
+    vector<model> out;
+    vector<double>::iterator it;
   vector<model>::iterator it_mu=mu_set.begin();
     bool set=false;
 
@@ -772,9 +772,10 @@ model* pseudo_experiment::getrange(map<model,double> rcrit){
       // the only condition that matters
       if (set){
           set=true;
-	out[0]=*it_mu;
+//	out[0]=*it_mu;
       }
-      out[1]=*it_mu;
+//      out[1]=*it_mu;
+        out.push_back(*it_mu);
 
     }
 
