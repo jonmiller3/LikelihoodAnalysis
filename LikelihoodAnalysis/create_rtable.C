@@ -73,10 +73,10 @@ int main(int argc, char **argv){
     double testThmantle = atof(argv[12]);
     double testThcore = atof(argv[13]);
 
-    double testKcrust = atof(argv[14]);
-    double testKocean = atof(argv[15]);
-    double testKmantle = atof(argv[16]);
-    double testKcore = atof(argv[17]);
+    double testKcrust = atof(argv[14])*1e4;
+    double testKocean = atof(argv[15])*1e4;
+    double testKmantle = atof(argv[16])*1e4;
+    double testKcore = atof(argv[17])*1e4;
     
   // this will change in the 'near' future
   TFile* signalfile = TFile::Open(inputsignal);
@@ -102,7 +102,7 @@ int main(int argc, char **argv){
   TH3FSpec* bpdf = (TH3FSpec*)signalfile->Get("finalpdf_sun");
   
   lmu* ltotal = new lmu(spdf,bpdf);
-  int numexp = 1000;
+  int numexp = 100;
 
   ofstream myfile;
   myfile.open(outputcritfile.c_str(),ios::app);

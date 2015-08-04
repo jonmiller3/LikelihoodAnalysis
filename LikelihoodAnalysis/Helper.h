@@ -28,12 +28,16 @@
 #include <TRandom3.h>
 #include <TCanvas.h>
 
+//#define USEOPENCL
+
 #ifdef __APPLE__
 #include <OpenCL/OpenCL.h>
 #else
 #include <stdio.h>
 #include <string.h>
+#ifdef USEOPENCL
 #include "CL/cl.h"
+#endif
 #define FALSE false
 #define TRUE true
 #endif
@@ -219,7 +223,7 @@ public:
 };
 
 
-
+#ifdef USEOPENCL
 // this is a tool from NVIDIA
 //////////////////////////////////////////////////////////////////////////////
 //! Loads a Program file and prepends the cPreamble to the code.
@@ -395,7 +399,7 @@ size_t len;
     return 0;
     
 }
-
+#endif
 
 
 #endif /* defined(__LikelihoodAnalysis__Helper__) */

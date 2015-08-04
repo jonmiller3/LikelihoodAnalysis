@@ -12,7 +12,7 @@
 #include "Helper.h"
 //class lmu;
 
-#define USEOPENCL
+//#define USEOPENCL
 
 //#define USECPU
 #ifdef cl_khr_fp64
@@ -631,7 +631,7 @@ void pseudo_experiment::run(bool createvector=false){
     
     double tval[13];
 
-    double np=5.;
+    double np=4.;
     
     int ncells=plmu->getncells();
     
