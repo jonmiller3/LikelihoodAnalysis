@@ -14,7 +14,7 @@
 
 //#define USEOPENCL
 
-//#define USECPU
+#define USECPU
 #ifdef cl_khr_fp64
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
 #elif defined(cl_amd_fp64)
@@ -40,20 +40,9 @@ using namespace std;
 
 float* float_from_model(model mu){
   
-    float* res = new float[12];
+    float* res = new float[1];
     
-    res[0]=mu.Ucore;
-    res[1]=mu.Umantle;
-    res[2]=mu.Ucrust;
-    res[3]=mu.Uocean;
-    res[4]=mu.Ucore;
-    res[5]=mu.Umantle;
-    res[6]=mu.Ucrust;
-    res[7]=mu.Uocean;
-    res[8]=mu.Ucore;
-    res[9]=mu.Umantle;
-    res[10]=mu.Ucrust;
-    res[11]=mu.Uocean;
+    res[0]=mu.signal;
     
     return res;
     
@@ -87,7 +76,7 @@ class pseudo_experiment{
 #ifdef USEOPENCL
     void rungpu();
 #endif
-  double getlogr(){float calcres; plmu->calc(phi,energy,theta,mu_true,nobs,calcres); return (calcres-maxl);}
+  double getlogr(){float calcres; plmu->calc(phi,mu_true,nobs,calcres); return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   vector<model> getrange(map<model,double>);
     void writerootfile(string);
@@ -103,7 +92,7 @@ void pseudo_experiment::writerootfile(string name){
     model mu;
     double r;
     
-    datatree->Branch("model",&mu,"Ucrust/D:Uocean:Ucore:Umantle:Thcrust:Thocean:Thcore:Thmantle:Kcrust:Kocean:Kcore:Kmantle");
+    datatree->Branch("model",&mu,"signal/D");
     datatree->Branch("ratio",&r,"ratio/D");
     
     
@@ -140,7 +129,7 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
     theta = new double[nobs];
 
     // this gets all?
-  data_in_bins=plmu->getrandom(mu_true,nobs,phi,energy,theta);
+  data_in_bins=plmu->getrandom(mu_true,nobs,phi);
     
     
     // this is another way (doesn't work)
@@ -152,20 +141,7 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
   maxl=0;
     
     
-    maxmu.Ucore=0;
-    maxmu.Umantle=163;
-    maxmu.Ucrust=194;
-    maxmu.Uocean=4;
-
-    maxmu.Thcore=0;
-    maxmu.Thmantle=653;
-    maxmu.Thcrust=759;
-    maxmu.Thocean=15;
-    
-    maxmu.Kcore=0;
-    maxmu.Kmantle=163*1e4;
-    maxmu.Kcrust=194*1e4;
-    maxmu.Kocean=4*1e4;
+    maxmu.signal=0;
     
     
 }
@@ -629,84 +605,35 @@ void pseudo_experiment::run(bool createvector=false){
     // I think that I need to do 5.5 loops
     int i=0;
     
-    double tval[13];
-
-    double np=4.;
+    double tval[2];
     
     int ncells=plmu->getncells();
     
     tval[0]=1;
     
     
-    for (int Pcore=0; Pcore<np; Pcore++){
-        for (int Pmantle=-np; Pmantle<np; Pmantle++){
-            for (int Pocean=-np; Pocean<np; Pocean++){
-                for (int iUcrust=-np; iUcrust<np; iUcrust++){
-                    for (int iThcrust=-np; iThcrust<np; iThcrust++){
-                        for (int iKcrust=-np; iKcrust<np; iKcrust++){
-                            mutest.Ucore=Pcore/np*mu.Umantle;
-                            mutest.Kcore=Pcore/np*mu.Kmantle;
-                            mutest.Thcore=Pcore/np*mu.Thmantle;
-                            
-                            mutest.Thmantle=(np+Pmantle)/np*mu.Thmantle;
-                            mutest.Umantle=(np+Pmantle)/np*mu.Umantle;
-                            mutest.Kmantle=(np+Pmantle)/np*mu.Kmantle;
+    for (int tm=0; tm<50; tm++){
+                            mutest.signal=tm/10.;
 
-                            mutest.Thcrust=(np+iThcrust)/np*mu.Thcrust;
-                            mutest.Ucrust=(np+iUcrust)/np*mu.Ucrust;
-                            mutest.Kcrust=(np+iKcrust)/np*mu.Kcrust;
                             
-                            mutest.Thocean=(np+Pocean)/np*mutest.Thocean;
-                            mutest.Uocean=(np+Pocean)/np*mutest.Uocean;
-                            mutest.Kocean=(np+Pocean)/np*mutest.Kocean;
-                            
-                            tval[1]=mutest.Ucore;
-                            tval[2]=mutest.Umantle;
-                            tval[3]=mutest.Ucrust;
-                            tval[4]=mutest.Uocean;
+                            tval[1]=mutest.signal;
 
-                            tval[5]=mutest.Thcore;
-                            tval[6]=mutest.Thmantle;
-                            tval[7]=mutest.Thcrust;
-                            tval[8]=mutest.Thocean;
-                            
-                            tval[9]=mutest.Kcore;
-                            tval[10]=mutest.Kmantle;
-                            tval[11]=mutest.Kcrust;
-                            tval[12]=mutest.Kocean;
-                
                             double l=0;
                             
                             
                             for (int i=0; i<nobs; i++){
                                 
                                 float content=0;
-                                for (int modelnumber=0; modelnumber<13; modelnumber++){
+                                for (int modelnumber=0; modelnumber<2; modelnumber++){
                                     content+=(model_in_bins[modelnumber*ncells+data_in_bins[i]]*tval[modelnumber]);
-                            
-                                    /*
-                                    if (model_in_bins[data_in_bins[i]]!=(plmu->getfb())->GetBinContent(data_in_bins[i])) {
-                                        std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
-                                    }
-                                     */
-                                    
-                                    
-                                    
-                                    /*
-                                     if (model_in_bins[data_in_bins[i]+1*ncells]!=(plmu->getfs1())->GetBinContent(data_in_bins[i])) {
-                                         std::cout<<" there is a problem with "<<model_in_bins[data_in_bins[i]+1*ncells]<<" "<<data_in_bins[i]<<" "<<i<<std::endl;
-                                     }
-                                     */
                         
                                     
                                 }
                                 
                                 if (content!=0) {
-                                    //cout<<" l content "<<content<<" at bin "<<data_in_bins[i]<<endl;
                                     content = TMath::Log(content);
                                     
                                 } else {
-                                    //cout<<" content "<<content<<" bin "<<data_in_bins[i]<<" "<<model_in_bins[data_in_bins[i]+1*ncells]<<endl;
                                     content = -1000;
                                 }
                                 
@@ -718,34 +645,20 @@ void pseudo_experiment::run(bool createvector=false){
                             }
                             
                             
-                            
-                            /*
-                            float calcres;
-                            plmu->calc(data_in_bins,mutest,nobs,calcres);
-                            if (calcres!=l) cout<<" problem "<<calcres<<" "<<l<<endl;
-*/
-                            
+        
                             
                             
                             if (createvector){
                                 lt_set.push_back(l);
                                 mu_set.push_back(mutest);
                             }
-                            //cout<<" here is lt "<<lt<<" here is l "<<l<<endl;
-                            
+        
                             if (l>maxl||i==0){
-                                //if (i!=0) cout<<" new max "<<maxl<<" "<<l<<endl;
                                 maxl=l;
                                 maxmu=mutest;
                             }
                             i++;
                             
-                            
-                        }
-                    }
-                }
-            }
-        }
     
     }
     

@@ -26,6 +26,7 @@
 #include <TH3D.h>
 #include <TH3F.h>
 
+
 using namespace std;
 
 int main(int argc, char ** argv) {
@@ -36,69 +37,26 @@ int main(int argc, char ** argv) {
     string outputfile = argv[2];
     string extrafile = argv[3];
     
-    double testback = atof(argv[4]);
-    
-    double testUcrust = atof(argv[6]);
-    double testUocean = atof(argv[7]);
-    double testUmantle = atof(argv[8]);
-    double testUcore = atof(argv[9]);
-    
-    double testThcrust = atof(argv[10]);
-    double testThocean = atof(argv[11]);
-    double testThmantle = atof(argv[12]);
-    double testThcore = atof(argv[13]);
-    
-    double testKcrust = atof(argv[14]);
-    double testKocean = atof(argv[15]);
-    double testKmantle = atof(argv[16]);
-    double testKcore = atof(argv[17]);
+    double testsignal = atof(argv[4]);
     
     // this will change in the 'near' future
     TFile* signalfile = TFile::Open(inputsignal);
     //TFile* testfile = TFile::Open(inputtest);
     
-    modelpdf spdf;
     
-    spdf.Ucore = (TH3FSpec*)signalfile->Get("finalpdf_ucore");
-    spdf.Umantle = (TH3FSpec*)signalfile->Get("finalpdf_umantle");
-    spdf.Ucrust = (TH3FSpec*)signalfile->Get("finalpdf_ucrust");
-    spdf.Uocean = (TH3FSpec*)signalfile->Get("finalpdf_uocean");
-    
-    spdf.Thcore = (TH3FSpec*)signalfile->Get("finalpdf_thcore");
-    spdf.Thmantle = (TH3FSpec*)signalfile->Get("finalpdf_thmantle");
-    spdf.Thcrust = (TH3FSpec*)signalfile->Get("finalpdf_thcrust");
-    spdf.Thocean = (TH3FSpec*)signalfile->Get("finalpdf_thocean");
-    
-    spdf.Kcore = (TH3FSpec*)signalfile->Get("finalpdf_kcore");
-    spdf.Kmantle = (TH3FSpec*)signalfile->Get("finalpdf_kmantle");
-    spdf.Kcrust = (TH3FSpec*)signalfile->Get("finalpdf_kcrust");
-    spdf.Kocean = (TH3FSpec*)signalfile->Get("finalpdf_kocean");
-    
-    TH3FSpec* bpdf = (TH3FSpec*)signalfile->Get("finalpdf_sun");
+    TH1FSpec* bpdf = (TH1FSpec*)signalfile->Get("finalpdf_back");
+    spdf.signal = (TH1FSpec*)signalfile->Get("finalpdf_signal");
     
     lmu* ltotal = new lmu(spdf,bpdf);
-    int nexp = 1;
+    int nexp = 10000;
 
     double nevents = bpdf->Integral();
     int nev = (int)nevents+1;
 
     
     
-    model testmu;
-    testmu.Ucore=testUcore;
-    testmu.Umantle=testUmantle;
-    testmu.Ucrust=testUcrust;
-    testmu.Uocean=testUocean;
-    
-    testmu.Thcore=testThcore;
-    testmu.Thmantle=testThmantle;
-    testmu.Thcrust=testThcrust;
-    testmu.Thocean=testThocean;
-    
-    testmu.Kcore=testKcore;
-    testmu.Kmantle=testKmantle;
-    testmu.Kcrust=testKcrust;
-    testmu.Kocean=testKocean;
+    model testmu;
+    testmu.signal=testsignal;
     
     
     // the idea is that I create a root file

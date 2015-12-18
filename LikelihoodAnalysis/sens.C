@@ -34,23 +34,10 @@ int main(int argc, char **argv){
 
     modelpdf spdf;
     
-    TH3D* bpdf = (TH3D*)signalfile->Get("finalpdf_sun");
+    TH1FSpec* bpdf = (TH1FSpec*)signalfile->Get("finalpdf_back");
 
     
-    spdf.Ucore = (TH3D*)signalfile->Get("finalpdf_ucore");
-    spdf.Umantle = (TH3D*)signalfile->Get("finalpdf_umantle");
-    spdf.Ucrust = (TH3D*)signalfile->Get("finalpdf_ucrust");
-    spdf.Uocean = (TH3D*)signalfile->Get("finalpdf_uocean");
-    
-    spdf.Thcore = (TH3D*)signalfile->Get("finalpdf_thcore");
-    spdf.Thmantle = (TH3D*)signalfile->Get("finalpdf_thmantle");
-    spdf.Thcrust = (TH3D*)signalfile->Get("finalpdf_thcrust");
-    spdf.Thocean = (TH3D*)signalfile->Get("finalpdf_thocean");
-    
-    spdf.Kcore = (TH3D*)signalfile->Get("finalpdf_kcore");
-    spdf.Kmantle = (TH3D*)signalfile->Get("finalpdf_kmantle");
-    spdf.Kcrust = (TH3D*)signalfile->Get("finalpdf_kcrust");
-    spdf.Kocean = (TH3D*)signalfile->Get("finalpdf_kocean");
+    spdf.signal = (TH1FSpec*)signalfile->Get("finalpdf_signal");
     
   lmu* ltotal = new lmu(spdf,bpdf);
 
@@ -60,20 +47,7 @@ int main(int argc, char **argv){
     model maxmu;
     
     
-    maxmu.Ucore=0;
-    maxmu.Umantle=163;
-    maxmu.Ucrust=194;
-    maxmu.Uocean=4;
-    
-    maxmu.Thcore=0;
-    maxmu.Thmantle=653;
-    maxmu.Thcrust=759;
-    maxmu.Thocean=15;
-    
-    maxmu.Kcore=0;
-    maxmu.Kmantle=163*1e4;
-    maxmu.Kcrust=194*1e4;
-    maxmu.Kocean=4*1e4;
+    maxmu.signal=0;
   
     double nevents = ltotal->getintegral(maxmu);
 
@@ -100,20 +74,7 @@ int main(int argc, char **argv){
     model mu
 
       double rc;
-      ss>>mu.Ucore;
-      ss>>mu.Umantle;
-      ss>>mu.Ucrust;
-      ss>>mu.Uocean;
-
-      ss>>mu.Thcore;
-      ss>>mu.Thmantle;
-      ss>>mu.Thcrust;
-      ss>>mu.Thocean;
-      
-      ss>>mu.Kcore;
-      ss>>mu.Kmantle;
-      ss>>mu.Kcrust;
-      ss>>mu.Kocean;
+      ss>>mu.signal;
       
     ss>>rc;
 
@@ -133,7 +94,7 @@ int main(int argc, char **argv){
     
     model mu;
     
-    datatree->Branch("model",&mu,"Ucrust/D:Uocean:Ucore:Umantle:Thcrust:Thocean:Thcore:Thmantle:Kcrust:Kocean:Kcore:Kmantle");
+    datatree->Branch("model",&mu,"signal/D");
   vector<model> bound;
 
 
