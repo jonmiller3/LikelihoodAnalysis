@@ -65,18 +65,18 @@ int main(int argc, char **argv){
     
     // this will change in the 'near' future
     TFile* signalfile = TFile::Open(inputsignal);
-    //TFile* testfile = TFile::Open(inputtest);
+    TFile* testfile = TFile::Open(inputtest);
     
     
     
     modelpdf spdf;
  
-    TH1FSpec* bpdf = (TH1FSpec*)signalfile->Get("finalpdf_back");
-    spdf.signal = (TH1FSpec*)signalfile->Get("finalpdf_signal");
+    TH1FSpec* bpdf = (TH1FSpec*)testfile->Get("pdf40");
+    spdf.signal = (TH1FSpec*)signalfile->Get("pdf40");
 
     lmu* ltotal = new lmu(spdf,bpdf);
     
-    int nexp = 1000;
+    int nexp = 100;
     
   ofstream myfile;
   myfile.open(extrafile.c_str(),ios::app);
@@ -85,13 +85,20 @@ int main(int argc, char **argv){
     model testmu;
     testmu.signal=testsignal;
     
-    double nevents = ltotal->getintegral(testmu);
-    // nev should be the null number of events
+    
+    double nevents = bpdf->Integral();
+    double sevents = spdf.signal->Integral();
+    
+    nevents = ltotal->getintegral(testmu);
     int nev = (int)nevents+1;
+    // nev should be the null number of events
     
-    cout<<" number of events "<<nev<<endl;
     
+    // I think I changed it so this is not necessary
+    //spdf.signal->Scale(1./sevents);
     //bpdf->Scale(1./nevents);
+    
+    cout<<" number of events (combined) "<<nevents<<" signal events "<<testmu.signal<<endl;
     
     double rcrit = calculatercrit(nev,testmu,ltotal,nexp,outputfile);
 

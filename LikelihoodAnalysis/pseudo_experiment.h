@@ -76,7 +76,10 @@ class pseudo_experiment{
 #ifdef USEOPENCL
     void rungpu();
 #endif
-  double getlogr(){float calcres; plmu->calc(phi,mu_true,nobs,calcres); return (calcres-maxl);}
+    double getlogr(){float calcres;
+        plmu->calc(phi,mu_true,nobs,calcres);
+        cout<<" calcres "<<calcres<<" "<<maxl<<endl;
+        return (calcres-maxl);}
     pseudo_experiment(){delete phi; delete plmu; delete energy; delete theta;}
   vector<model> getrange(map<model,double>);
     void writerootfile(string);
@@ -141,7 +144,7 @@ pseudo_experiment::pseudo_experiment(int n, model mt, lmu* l){
   maxl=0;
     
     
-    maxmu.signal=0;
+    maxmu.signal=50;
     
     
 }
@@ -261,7 +264,7 @@ void pseudo_experiment::rungpu(){
     cxGPUContext = clCreateContext(0, ciDeviceCount, cdDevices, NULL, NULL, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
     {
-        std::cout<<" failed to create context"<<ciErrNum<<std::endl;
+        std::cout<<" failedto crate context"<<ciErrNum<<std::endl;
     }
     
     std::cout<<" I think that I have produced all the contexts that I need "<<std::endl;
@@ -605,6 +608,7 @@ void pseudo_experiment::run(bool createvector=false){
     // I think that I need to do 5.5 loops
     int i=0;
     
+    
     double tval[2];
     
     int ncells=plmu->getncells();
@@ -612,15 +616,17 @@ void pseudo_experiment::run(bool createvector=false){
     tval[0]=1;
     
     
-    for (int tm=0; tm<50; tm++){
+    for (int tm=0; tm<10*mu.signal; tm++){
                             mutest.signal=tm/10.;
 
                             
                             tval[1]=mutest.signal;
 
                             double l=0;
+        float lt=0;
                             
-                            
+                            data_in_bins=plmu->calc(phi,mutest,nobs,lt);
+        
                             for (int i=0; i<nobs; i++){
                                 
                                 float content=0;
@@ -631,16 +637,26 @@ void pseudo_experiment::run(bool createvector=false){
                                 }
                                 
                                 if (content!=0) {
+
                                     content = TMath::Log(content);
+                                    if (content<-100) {
+                                        cout<<" very small content "<<content<<" nobs "<<nobs<<" pdf "<<model_in_bins[data_in_bins[i]]<<" "<<model_in_bins[data_in_bins[i]+ncells]<<endl;
+                                    }
                                     
                                 } else {
+                                    cout<<" problem "<<content<<" nobs "<<nobs<<" pdf "<<model_in_bins[data_in_bins[i]]<<" "<<model_in_bins[data_in_bins[i]+ncells]<<endl;
                                     content = -1000;
                                 }
                                 
                                 
 
-                                
+
                                 l+=(double)content;
+
+                                if (l>1000) {
+                                    
+                                    cout<<" very large l "<<content<<" nobs "<<nobs<<" pdf "<<model_in_bins[data_in_bins[i]]<<" "<<model_in_bins[data_in_bins[i]+ncells]<<endl;
+                                }
                                 
                             }
                             
@@ -649,20 +665,23 @@ void pseudo_experiment::run(bool createvector=false){
                             
                             
                             if (createvector){
-                                lt_set.push_back(l);
+                                lt_set.push_back(lt);
                                 mu_set.push_back(mutest);
                             }
         
-                            if (l>maxl||i==0){
-                                maxl=l;
+        
+        if (i%100==0) cout<<" l "<<l<<" mu "<<mutest.signal<<" maxl "<<maxl<<" and lt "<<lt<<endl;
+        if (lt>maxl||i==0){
+                                
+                                maxl=lt;
                                 maxmu=mutest;
                             }
                             i++;
-                            
+        
     
     }
     
-    //cout<<" max is "<<maxl<<endl;
+    cout<<" max is "<<maxl<<" and mu "<<mutest.signal<<endl;
     
 
     

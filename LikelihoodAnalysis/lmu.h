@@ -20,6 +20,7 @@
 #include <iostream>
 //#include <thread>
 
+#define MODELPARAMETERS 2
 
 #include "Helper.h"
 
@@ -96,17 +97,30 @@ float* lmu::getmodelarray(){
     
     
     // I think that doing this is unncessary
+    double intfs = fs.signal->Integral();
+    double intfb = fb->Integral();
+    
     const float* barray = fb->GetArray();
     const float* s1array = fs.signal->GetArray();
     
-    // res should be 13*nbins
-    float* res = new float[ncells*2];
+    float* s1a = new float[ncells];
+    float* ba = new float[ncells];
     
-    copy(barray, barray+ncells, res);
-    copy(s1array, s1array+ ncells, res + ncells);
+    
+    
+    for (int i=0; i<ncells; i++) {
+        ba[i]=barray[i]/intfb;
+        s1a[i]=s1array[i]/intfs;
+    }
+    
+    // res should be 13*nbins
+    float* res = new float[ncells*MODELPARAMETERS];
+    
+    copy(ba, ba+ncells, res);
+    copy(s1a, s1a+ ncells, res + ncells);
  
-    for (int i=0; i<ncells*13; i++) {
-        if (isnan(res[i])) std::cout<<" test "<<res[i]<<std::endl;
+    for (int i=0; i<ncells*MODELPARAMETERS; i++) {
+        if (isnan(res[i])) std::cout<<" test is nan "<<res[i]<<std::endl;
     }
     
     return res;
@@ -122,8 +136,14 @@ int* lmu::calc(double* phi, model mu, int nobs, float& totalcontent){
 
   ft = new TH1FSpec("ft","ft",nbinsx,0,maxx);
 
-    ft->Add(fs.signal,fb,mu.signal,1);
-
+    double intfs = fs.signal->Integral();
+    ft->Add(fs.signal,fb,mu.signal/intfs,1);
+    
+    double intft = ft->Integral();
+    
+    //cout<<" integral calcint* "<<intft<<" signal "<<mu.signal<<" "<<intfs<<endl;
+    ft->Scale(1/intft);
+    
   totalcontent=0;
   for (int i=0; i<nobs; i++){
 
@@ -138,7 +158,6 @@ int* lmu::calc(double* phi, model mu, int nobs, float& totalcontent){
     if (content!=0) {
         
         content = TMath::Log(content);
-        
         
     } else {
         cout<<" test content "<<content<<" at bin "<<bin<<endl;
@@ -162,8 +181,13 @@ int lmu::calc(int* binres, model mu, int nobs, float& totalcontent){
     
     ft = new TH1FSpec("ft","ft",nbinsx,0,maxx);
     
-    ft->Add(fs.signal,fb,mu.signal,1);
+    double intfs = fs.signal->Integral();
+    ft->Add(fs.signal,fb,mu.signal/intfs,1);
     
+    double intft = ft->Integral();
+    
+    //cout<<" integral calcint "<<intft<<" signal "<<mu.signal<<" "<<intfs<<endl;
+    ft->Scale(1/intft);
     totalcontent=0;
     for (int i=0; i<nobs; i++){
         
@@ -198,8 +222,18 @@ int* lmu::getrandom(model mu, int nobs, double* phi){
   ft=0;
   ft = new TH1FSpec("ft","ft",nbinsx,0,maxx);
     
-    ft->Add(fs.signal,fb,mu.signal,1);
+    double intfs = fs.signal->Integral();
 
+    ft->Add(fs.signal,fb,mu.signal/intfs,1);
+    
+    // I think this is the problem
+    double intft = ft->Integral();
+    
+    cout<<" integral "<<intft<<" signal "<<mu.signal<<" "<<intfs<<endl;
+    
+    ft->Scale(1/intft);
+    
+    
   for (int i=0; i<nobs; i++){
     double out1=0;
       double out2=0;
@@ -228,15 +262,14 @@ double lmu::getintegral(model mu){
     
     double res=0;
     
-    
-    
     ft=0;
     ft = new TH1FSpec("ft","ft",nbinsx,0,maxx);
     
-    
-    ft->Add(fs.signal,fb,mu.signal,1);
+    double intfs = fs.signal->Integral();
+    ft->Add(fs.signal,fb,mu.signal/intfs,1);
     
     res=ft->Integral();
+    
     
     delete ft;
     
